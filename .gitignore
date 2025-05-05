@@ -1,0 +1,25 @@
+# バイナリ、オブジェクトファイル
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# 一時ディレクトリ
+/tmp
+
+# 環境変数ファイル
+.env
+
+# エディタの設定
+.idea/
+.vscode/
+.history/
+*.swp
+*.swo
+
+# OS固有のファイル
+.DS_Store
+.DS_Store?

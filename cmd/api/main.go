@@ -1,0 +1,97 @@
+package main
+
+import (
+	"context"
+	"database/sql"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/MizukiShigi/cms-go/infrastructure/auth"
+	"github.com/MizukiShigi/cms-go/infrastructure/repository"
+	"github.com/MizukiShigi/cms-go/internal/presentation/controller"
+	"github.com/MizukiShigi/cms-go/internal/usecase"
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+)
+
+func main() {
+	loadDevelopEnv()
+
+	// DBセットアップ
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// DB接続の検証
+	if err := db.Ping(); err != nil {
+		log.Fatalf("データベース接続エラー: %v", err)
+	}
+
+	// リポジトリ初期化
+	userRepository := repository.NewUserRepository(db)
+
+	// サービス初期化
+	authService := auth.NewJWTService(os.Getenv("JWT_SECRET_KEY"))
+
+	// ユースケース初期化
+	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
+	loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
+
+	// コントローラー初期化
+	authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
+
+	// ルーティング設定
+	router := mux.NewRouter()
+
+	router.HandleFunc("/auth/register", authController.Register).Methods("POST")
+	router.HandleFunc("/auth/login", authController.Login).Methods("POST")
+
+	srv := &http.Server{
+		Addr:         os.Getenv("PORT"),
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	// シグナルハンドリング
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// サーバー起動
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+	log.Printf("server is running on port %s\n", os.Getenv("PORT"))
+
+	// シグナルを受け取り、コンテキストをキャンセルする
+	<-ctx.Done()
+	log.Println("server is shutting down...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("server shutdown failed: %s\n", err)
+	}
+
+	log.Println("server exited properly")
+}
+
+func loadDevelopEnv() {
+	env := os.Getenv("GO_ENV")
+	if env == "" || env == "development" {
+		// 開発環境のみ .env ファイルを読み込む
+		if err := godotenv.Load(".env.development"); err != nil {
+			log.Fatalf("警告: .env.development ファイルが見つかりません")
+		}
+	}
+}

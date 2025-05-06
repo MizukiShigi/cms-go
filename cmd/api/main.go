@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	"github.com/MizukiShigi/cms-go/infrastructure/auth"
 	"github.com/MizukiShigi/cms-go/infrastructure/repository"
 	"github.com/MizukiShigi/cms-go/internal/presentation/controller"
@@ -22,7 +24,7 @@ func main() {
 	loadDevelopEnv()
 
 	// DBセットアップ
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	db, err := sql.Open("postgres", os.Getenv("DB_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}

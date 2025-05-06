@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
 	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
@@ -25,9 +26,9 @@ type RegisterUserUsecase struct {
 	userRepository repository.UserRepository
 }
 
-func NewRegisterUserUsecase(userRepository *repository.UserRepository) *RegisterUserUsecase {
+func NewRegisterUserUsecase(userRepository repository.UserRepository) *RegisterUserUsecase {
 	return &RegisterUserUsecase{
-		userRepository: *userRepository,
+		userRepository: userRepository,
 	}
 }
 
@@ -39,7 +40,14 @@ func (u *RegisterUserUsecase) Execute(ctx context.Context, input *RegisterUserIn
 
 	existingUser, err := u.userRepository.FindByEmail(ctx, email)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to find user")
+		var myErr *myerror.MyError
+		if !errors.As(err, &myErr) {
+			return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to find user")
+		}
+		if myErr.Code != myerror.NotFoundCode {
+			// 独自エラーのユーザーが存在しない場合のエラーのみ登録処理を続行
+			return nil, err
+		}
 	}
 	if existingUser != nil {
 		return nil, myerror.NewMyError(myerror.ConflictCode, "User already exists")
@@ -47,12 +55,12 @@ func (u *RegisterUserUsecase) Execute(ctx context.Context, input *RegisterUserIn
 
 	user, err := entity.NewUser(input.Name, email, input.Password)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to create user")
+		return nil, err
 	}
 
 	err = u.userRepository.Save(ctx, user)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to save user")
+		return nil, err
 	}
 
 	return &RegisterUserOutput{

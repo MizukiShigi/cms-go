@@ -37,7 +37,7 @@ func NewLoginUserUsecase(userRepository repository.UserRepository, authService s
 	}
 }
 
-func (u *LoginUserUsecase) Execute(ctx context.Context, input LoginUserInput) (*LoginUserOutput, error) {
+func (u *LoginUserUsecase) Execute(ctx context.Context, input *LoginUserInput) (*LoginUserOutput, error) {
 	email, err := valueobject.NewEmail(input.Email)
 	if err != nil {
 		return nil, err

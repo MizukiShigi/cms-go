@@ -12,14 +12,19 @@ COPY . .
 # アプリケーションのビルド
 RUN CGO_ENABLED=0 GOOS=linux go build -o cms-api ./cmd/api/main.go
 
-# 実行用の小さなイメージを作成
-FROM alpine:latest
+# 開発用イメージ 
+FROM golang:1.24-alpine AS dev
+WORKDIR /app
+RUN go install github.com/air-verse/air@latest
+COPY --from=builder /app .
+# 開発モードでの実行コマンド
+CMD ["air", "-c", ".air.toml"]
+
+# 本番用イメージ
+FROM alpine:latest AS prod
 RUN apk --no-cache add ca-certificates
-
 WORKDIR /root/
-
 # ビルドイメージからバイナリをコピー
 COPY --from=builder /app/cms-api .
-
-# アプリケーションの実行
+# 本番実行コマンド
 CMD ["./cms-api"]

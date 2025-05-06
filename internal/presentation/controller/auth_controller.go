@@ -63,9 +63,43 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(output)
+	userResponse := UserResponse{
+		ID:    output.UserID,
+		Name:  output.Name,
+		Email: output.Email,
+	}
+
+	helper.RespondWithJSON(w, http.StatusCreated, userResponse)
 }
 
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		MyError := myerror.NewMyError(myerror.InvalidRequestCode, "Invalid request payload")
+		helper.RespondWithError(w, MyError)
+		return
+	}
+
+	input := &usecase.LoginUserInput{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	output, err := ac.loginUserUsecase.Execute(r.Context(), input)
+	if err != nil {
+		helper.RespondWithError(w, err)
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:    output.User.ID,
+		Name:  output.User.Name,
+		Email: output.User.Email,
+	}
+	loginResponse := LoginResponse{
+		Token: output.Token,
+		User:  userResponse,
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, loginResponse)
 }

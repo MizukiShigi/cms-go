@@ -494,7 +494,7 @@ func testUsersInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testUserToManyAuthorPosts(t *testing.T) {
+func testUserToManyPosts(t *testing.T) {
 	var err error
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
@@ -519,8 +519,8 @@ func testUserToManyAuthorPosts(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b.AuthorID = a.ID
-	c.AuthorID = a.ID
+	b.UserID = a.ID
+	c.UserID = a.ID
 
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
@@ -529,17 +529,17 @@ func testUserToManyAuthorPosts(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	check, err := a.AuthorPosts().All(ctx, tx)
+	check, err := a.Posts().All(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if v.AuthorID == b.AuthorID {
+		if v.UserID == b.UserID {
 			bFound = true
 		}
-		if v.AuthorID == c.AuthorID {
+		if v.UserID == c.UserID {
 			cFound = true
 		}
 	}
@@ -552,18 +552,18 @@ func testUserToManyAuthorPosts(t *testing.T) {
 	}
 
 	slice := UserSlice{&a}
-	if err = a.L.LoadAuthorPosts(ctx, tx, false, (*[]*User)(&slice), nil); err != nil {
+	if err = a.L.LoadPosts(ctx, tx, false, (*[]*User)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.AuthorPosts); got != 2 {
+	if got := len(a.R.Posts); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
-	a.R.AuthorPosts = nil
-	if err = a.L.LoadAuthorPosts(ctx, tx, true, &a, nil); err != nil {
+	a.R.Posts = nil
+	if err = a.L.LoadPosts(ctx, tx, true, &a, nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.AuthorPosts); got != 2 {
+	if got := len(a.R.Posts); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
@@ -572,7 +572,7 @@ func testUserToManyAuthorPosts(t *testing.T) {
 	}
 }
 
-func testUserToManyAddOpAuthorPosts(t *testing.T) {
+func testUserToManyAddOpPosts(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -609,7 +609,7 @@ func testUserToManyAddOpAuthorPosts(t *testing.T) {
 	}
 
 	for i, x := range foreignersSplitByInsertion {
-		err = a.AddAuthorPosts(ctx, tx, i != 0, x...)
+		err = a.AddPosts(ctx, tx, i != 0, x...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -617,28 +617,28 @@ func testUserToManyAddOpAuthorPosts(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if a.ID != first.AuthorID {
-			t.Error("foreign key was wrong value", a.ID, first.AuthorID)
+		if a.ID != first.UserID {
+			t.Error("foreign key was wrong value", a.ID, first.UserID)
 		}
-		if a.ID != second.AuthorID {
-			t.Error("foreign key was wrong value", a.ID, second.AuthorID)
+		if a.ID != second.UserID {
+			t.Error("foreign key was wrong value", a.ID, second.UserID)
 		}
 
-		if first.R.Author != &a {
+		if first.R.User != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
-		if second.R.Author != &a {
+		if second.R.User != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
 
-		if a.R.AuthorPosts[i*2] != first {
+		if a.R.Posts[i*2] != first {
 			t.Error("relationship struct slice not set to correct value")
 		}
-		if a.R.AuthorPosts[i*2+1] != second {
+		if a.R.Posts[i*2+1] != second {
 			t.Error("relationship struct slice not set to correct value")
 		}
 
-		count, err := a.AuthorPosts().Count(ctx, tx)
+		count, err := a.Posts().Count(ctx, tx)
 		if err != nil {
 			t.Fatal(err)
 		}

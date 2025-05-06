@@ -500,7 +500,7 @@ func (tagL) LoadPosts(ctx context.Context, e boil.ContextExecutor, singular bool
 	}
 
 	query := NewQuery(
-		qm.Select("\"posts\".\"id\", \"posts\".\"title\", \"posts\".\"content\", \"posts\".\"author_id\", \"posts\".\"status\", \"posts\".\"created_at\", \"posts\".\"updated_at\", \"a\".\"tag_id\""),
+		qm.Select("\"posts\".\"id\", \"posts\".\"title\", \"posts\".\"content\", \"posts\".\"user_id\", \"posts\".\"status\", \"posts\".\"created_at\", \"posts\".\"updated_at\", \"a\".\"tag_id\""),
 		qm.From("\"posts\""),
 		qm.InnerJoin("\"post_tags\" as \"a\" on \"posts\".\"id\" = \"a\".\"post_id\""),
 		qm.WhereIn("\"a\".\"tag_id\" in ?", argsSlice...),
@@ -521,7 +521,7 @@ func (tagL) LoadPosts(ctx context.Context, e boil.ContextExecutor, singular bool
 		one := new(Post)
 		var localJoinCol string
 
-		err = results.Scan(&one.ID, &one.Title, &one.Content, &one.AuthorID, &one.Status, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
+		err = results.Scan(&one.ID, &one.Title, &one.Content, &one.UserID, &one.Status, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
 		if err != nil {
 			return errors.Wrap(err, "failed to scan eager loaded results for posts")
 		}

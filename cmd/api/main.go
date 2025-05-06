@@ -51,8 +51,20 @@ func main() {
 	// ルーティング設定
 	router := mux.NewRouter()
 
-	router.HandleFunc("/auth/register", authController.Register).Methods("POST")
-	router.HandleFunc("/auth/login", authController.Login).Methods("POST")
+	// バージョニング
+	v1Router := router.PathPrefix("/cms/v1").Subrouter()
+
+	// 認証
+	authRouter := v1Router.PathPrefix("/auth").Subrouter()
+	authRouter.HandleFunc("/register", authController.Register).Methods("POST")
+	authRouter.HandleFunc("/login", authController.Login).Methods("POST")
+
+	// 投稿
+	postRouter := v1Router.PathPrefix("/posts").Subrouter()
+	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
+	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
+	postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
+	postRouter.HandleFunc("/{id}", postController.DeletePost).Methods("DELETE")
 
 	srv := &http.Server{
 		Addr:         os.Getenv("PORT"),

@@ -26,7 +26,7 @@ type Post struct {
 	ID        string    `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Title     string    `boil:"title" json:"title" toml:"title" yaml:"title"`
 	Content   string    `boil:"content" json:"content" toml:"content" yaml:"content"`
-	AuthorID  string    `boil:"author_id" json:"author_id" toml:"author_id" yaml:"author_id"`
+	UserID    string    `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	Status    string    `boil:"status" json:"status" toml:"status" yaml:"status"`
 	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
@@ -39,7 +39,7 @@ var PostColumns = struct {
 	ID        string
 	Title     string
 	Content   string
-	AuthorID  string
+	UserID    string
 	Status    string
 	CreatedAt string
 	UpdatedAt string
@@ -47,7 +47,7 @@ var PostColumns = struct {
 	ID:        "id",
 	Title:     "title",
 	Content:   "content",
-	AuthorID:  "author_id",
+	UserID:    "user_id",
 	Status:    "status",
 	CreatedAt: "created_at",
 	UpdatedAt: "updated_at",
@@ -57,7 +57,7 @@ var PostTableColumns = struct {
 	ID        string
 	Title     string
 	Content   string
-	AuthorID  string
+	UserID    string
 	Status    string
 	CreatedAt string
 	UpdatedAt string
@@ -65,7 +65,7 @@ var PostTableColumns = struct {
 	ID:        "posts.id",
 	Title:     "posts.title",
 	Content:   "posts.content",
-	AuthorID:  "posts.author_id",
+	UserID:    "posts.user_id",
 	Status:    "posts.status",
 	CreatedAt: "posts.created_at",
 	UpdatedAt: "posts.updated_at",
@@ -129,7 +129,7 @@ var PostWhere = struct {
 	ID        whereHelperstring
 	Title     whereHelperstring
 	Content   whereHelperstring
-	AuthorID  whereHelperstring
+	UserID    whereHelperstring
 	Status    whereHelperstring
 	CreatedAt whereHelpertime_Time
 	UpdatedAt whereHelpertime_Time
@@ -137,7 +137,7 @@ var PostWhere = struct {
 	ID:        whereHelperstring{field: "\"posts\".\"id\""},
 	Title:     whereHelperstring{field: "\"posts\".\"title\""},
 	Content:   whereHelperstring{field: "\"posts\".\"content\""},
-	AuthorID:  whereHelperstring{field: "\"posts\".\"author_id\""},
+	UserID:    whereHelperstring{field: "\"posts\".\"user_id\""},
 	Status:    whereHelperstring{field: "\"posts\".\"status\""},
 	CreatedAt: whereHelpertime_Time{field: "\"posts\".\"created_at\""},
 	UpdatedAt: whereHelpertime_Time{field: "\"posts\".\"updated_at\""},
@@ -145,17 +145,17 @@ var PostWhere = struct {
 
 // PostRels is where relationship names are stored.
 var PostRels = struct {
-	Author string
-	Tags   string
+	User string
+	Tags string
 }{
-	Author: "Author",
-	Tags:   "Tags",
+	User: "User",
+	Tags: "Tags",
 }
 
 // postR is where relationships are stored.
 type postR struct {
-	Author *User    `boil:"Author" json:"Author" toml:"Author" yaml:"Author"`
-	Tags   TagSlice `boil:"Tags" json:"Tags" toml:"Tags" yaml:"Tags"`
+	User *User    `boil:"User" json:"User" toml:"User" yaml:"User"`
+	Tags TagSlice `boil:"Tags" json:"Tags" toml:"Tags" yaml:"Tags"`
 }
 
 // NewStruct creates a new relationship struct
@@ -163,11 +163,11 @@ func (*postR) NewStruct() *postR {
 	return &postR{}
 }
 
-func (r *postR) GetAuthor() *User {
+func (r *postR) GetUser() *User {
 	if r == nil {
 		return nil
 	}
-	return r.Author
+	return r.User
 }
 
 func (r *postR) GetTags() TagSlice {
@@ -181,8 +181,8 @@ func (r *postR) GetTags() TagSlice {
 type postL struct{}
 
 var (
-	postAllColumns            = []string{"id", "title", "content", "author_id", "status", "created_at", "updated_at"}
-	postColumnsWithoutDefault = []string{"id", "title", "content", "author_id"}
+	postAllColumns            = []string{"id", "title", "content", "user_id", "status", "created_at", "updated_at"}
+	postColumnsWithoutDefault = []string{"id", "title", "content", "user_id"}
 	postColumnsWithDefault    = []string{"status", "created_at", "updated_at"}
 	postPrimaryKeyColumns     = []string{"id"}
 	postGeneratedColumns      = []string{}
@@ -513,10 +513,10 @@ func (q postQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool,
 	return count > 0, nil
 }
 
-// Author pointed to by the foreign key.
-func (o *Post) Author(mods ...qm.QueryMod) userQuery {
+// User pointed to by the foreign key.
+func (o *Post) User(mods ...qm.QueryMod) userQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.AuthorID),
+		qm.Where("\"id\" = ?", o.UserID),
 	}
 
 	queryMods = append(queryMods, mods...)
@@ -539,9 +539,9 @@ func (o *Post) Tags(mods ...qm.QueryMod) tagQuery {
 	return Tags(queryMods...)
 }
 
-// LoadAuthor allows an eager lookup of values, cached into the
+// LoadUser allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (postL) LoadAuthor(ctx context.Context, e boil.ContextExecutor, singular bool, maybePost interface{}, mods queries.Applicator) error {
+func (postL) LoadUser(ctx context.Context, e boil.ContextExecutor, singular bool, maybePost interface{}, mods queries.Applicator) error {
 	var slice []*Post
 	var object *Post
 
@@ -572,7 +572,7 @@ func (postL) LoadAuthor(ctx context.Context, e boil.ContextExecutor, singular bo
 		if object.R == nil {
 			object.R = &postR{}
 		}
-		args[object.AuthorID] = struct{}{}
+		args[object.UserID] = struct{}{}
 
 	} else {
 		for _, obj := range slice {
@@ -580,7 +580,7 @@ func (postL) LoadAuthor(ctx context.Context, e boil.ContextExecutor, singular bo
 				obj.R = &postR{}
 			}
 
-			args[obj.AuthorID] = struct{}{}
+			args[obj.UserID] = struct{}{}
 
 		}
 	}
@@ -635,22 +635,22 @@ func (postL) LoadAuthor(ctx context.Context, e boil.ContextExecutor, singular bo
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.Author = foreign
+		object.R.User = foreign
 		if foreign.R == nil {
 			foreign.R = &userR{}
 		}
-		foreign.R.AuthorPosts = append(foreign.R.AuthorPosts, object)
+		foreign.R.Posts = append(foreign.R.Posts, object)
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if local.AuthorID == foreign.ID {
-				local.R.Author = foreign
+			if local.UserID == foreign.ID {
+				local.R.User = foreign
 				if foreign.R == nil {
 					foreign.R = &userR{}
 				}
-				foreign.R.AuthorPosts = append(foreign.R.AuthorPosts, local)
+				foreign.R.Posts = append(foreign.R.Posts, local)
 				break
 			}
 		}
@@ -789,18 +789,18 @@ func (postL) LoadTags(ctx context.Context, e boil.ContextExecutor, singular bool
 	return nil
 }
 
-// SetAuthorG of the post to the related item.
-// Sets o.R.Author to related.
-// Adds o to related.R.AuthorPosts.
+// SetUserG of the post to the related item.
+// Sets o.R.User to related.
+// Adds o to related.R.Posts.
 // Uses the global database handle.
-func (o *Post) SetAuthorG(ctx context.Context, insert bool, related *User) error {
-	return o.SetAuthor(ctx, boil.GetContextDB(), insert, related)
+func (o *Post) SetUserG(ctx context.Context, insert bool, related *User) error {
+	return o.SetUser(ctx, boil.GetContextDB(), insert, related)
 }
 
-// SetAuthor of the post to the related item.
-// Sets o.R.Author to related.
-// Adds o to related.R.AuthorPosts.
-func (o *Post) SetAuthor(ctx context.Context, exec boil.ContextExecutor, insert bool, related *User) error {
+// SetUser of the post to the related item.
+// Sets o.R.User to related.
+// Adds o to related.R.Posts.
+func (o *Post) SetUser(ctx context.Context, exec boil.ContextExecutor, insert bool, related *User) error {
 	var err error
 	if insert {
 		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
@@ -810,7 +810,7 @@ func (o *Post) SetAuthor(ctx context.Context, exec boil.ContextExecutor, insert 
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"posts\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"author_id"}),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
 		strmangle.WhereClause("\"", "\"", 2, postPrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
@@ -824,21 +824,21 @@ func (o *Post) SetAuthor(ctx context.Context, exec boil.ContextExecutor, insert 
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.AuthorID = related.ID
+	o.UserID = related.ID
 	if o.R == nil {
 		o.R = &postR{
-			Author: related,
+			User: related,
 		}
 	} else {
-		o.R.Author = related
+		o.R.User = related
 	}
 
 	if related.R == nil {
 		related.R = &userR{
-			AuthorPosts: PostSlice{o},
+			Posts: PostSlice{o},
 		}
 	} else {
-		related.R.AuthorPosts = append(related.R.AuthorPosts, o)
+		related.R.Posts = append(related.R.Posts, o)
 	}
 
 	return nil

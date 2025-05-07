@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -23,52 +24,62 @@ import (
 
 // Post is an object representing the database table.
 type Post struct {
-	ID        string    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Title     string    `boil:"title" json:"title" toml:"title" yaml:"title"`
-	Content   string    `boil:"content" json:"content" toml:"content" yaml:"content"`
-	UserID    string    `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	Status    string    `boil:"status" json:"status" toml:"status" yaml:"status"`
-	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID               string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Title            string    `boil:"title" json:"title" toml:"title" yaml:"title"`
+	Content          string    `boil:"content" json:"content" toml:"content" yaml:"content"`
+	UserID           string    `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	Status           string    `boil:"status" json:"status" toml:"status" yaml:"status"`
+	CreatedAt        time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt        time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	FirstPublishedAt null.Time `boil:"first_published_at" json:"first_published_at,omitempty" toml:"first_published_at" yaml:"first_published_at,omitempty"`
+	ContentUpdatedAt null.Time `boil:"content_updated_at" json:"content_updated_at,omitempty" toml:"content_updated_at" yaml:"content_updated_at,omitempty"`
 
 	R *postR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L postL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var PostColumns = struct {
-	ID        string
-	Title     string
-	Content   string
-	UserID    string
-	Status    string
-	CreatedAt string
-	UpdatedAt string
+	ID               string
+	Title            string
+	Content          string
+	UserID           string
+	Status           string
+	CreatedAt        string
+	UpdatedAt        string
+	FirstPublishedAt string
+	ContentUpdatedAt string
 }{
-	ID:        "id",
-	Title:     "title",
-	Content:   "content",
-	UserID:    "user_id",
-	Status:    "status",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
+	ID:               "id",
+	Title:            "title",
+	Content:          "content",
+	UserID:           "user_id",
+	Status:           "status",
+	CreatedAt:        "created_at",
+	UpdatedAt:        "updated_at",
+	FirstPublishedAt: "first_published_at",
+	ContentUpdatedAt: "content_updated_at",
 }
 
 var PostTableColumns = struct {
-	ID        string
-	Title     string
-	Content   string
-	UserID    string
-	Status    string
-	CreatedAt string
-	UpdatedAt string
+	ID               string
+	Title            string
+	Content          string
+	UserID           string
+	Status           string
+	CreatedAt        string
+	UpdatedAt        string
+	FirstPublishedAt string
+	ContentUpdatedAt string
 }{
-	ID:        "posts.id",
-	Title:     "posts.title",
-	Content:   "posts.content",
-	UserID:    "posts.user_id",
-	Status:    "posts.status",
-	CreatedAt: "posts.created_at",
-	UpdatedAt: "posts.updated_at",
+	ID:               "posts.id",
+	Title:            "posts.title",
+	Content:          "posts.content",
+	UserID:           "posts.user_id",
+	Status:           "posts.status",
+	CreatedAt:        "posts.created_at",
+	UpdatedAt:        "posts.updated_at",
+	FirstPublishedAt: "posts.first_published_at",
+	ContentUpdatedAt: "posts.content_updated_at",
 }
 
 // Generated where
@@ -125,22 +136,50 @@ func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
+type whereHelpernull_Time struct{ field string }
+
+func (w whereHelpernull_Time) EQ(x null.Time) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Time) NEQ(x null.Time) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Time) LT(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Time) LTE(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Time) GT(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var PostWhere = struct {
-	ID        whereHelperstring
-	Title     whereHelperstring
-	Content   whereHelperstring
-	UserID    whereHelperstring
-	Status    whereHelperstring
-	CreatedAt whereHelpertime_Time
-	UpdatedAt whereHelpertime_Time
+	ID               whereHelperstring
+	Title            whereHelperstring
+	Content          whereHelperstring
+	UserID           whereHelperstring
+	Status           whereHelperstring
+	CreatedAt        whereHelpertime_Time
+	UpdatedAt        whereHelpertime_Time
+	FirstPublishedAt whereHelpernull_Time
+	ContentUpdatedAt whereHelpernull_Time
 }{
-	ID:        whereHelperstring{field: "\"posts\".\"id\""},
-	Title:     whereHelperstring{field: "\"posts\".\"title\""},
-	Content:   whereHelperstring{field: "\"posts\".\"content\""},
-	UserID:    whereHelperstring{field: "\"posts\".\"user_id\""},
-	Status:    whereHelperstring{field: "\"posts\".\"status\""},
-	CreatedAt: whereHelpertime_Time{field: "\"posts\".\"created_at\""},
-	UpdatedAt: whereHelpertime_Time{field: "\"posts\".\"updated_at\""},
+	ID:               whereHelperstring{field: "\"posts\".\"id\""},
+	Title:            whereHelperstring{field: "\"posts\".\"title\""},
+	Content:          whereHelperstring{field: "\"posts\".\"content\""},
+	UserID:           whereHelperstring{field: "\"posts\".\"user_id\""},
+	Status:           whereHelperstring{field: "\"posts\".\"status\""},
+	CreatedAt:        whereHelpertime_Time{field: "\"posts\".\"created_at\""},
+	UpdatedAt:        whereHelpertime_Time{field: "\"posts\".\"updated_at\""},
+	FirstPublishedAt: whereHelpernull_Time{field: "\"posts\".\"first_published_at\""},
+	ContentUpdatedAt: whereHelpernull_Time{field: "\"posts\".\"content_updated_at\""},
 }
 
 // PostRels is where relationship names are stored.
@@ -181,9 +220,9 @@ func (r *postR) GetTags() TagSlice {
 type postL struct{}
 
 var (
-	postAllColumns            = []string{"id", "title", "content", "user_id", "status", "created_at", "updated_at"}
+	postAllColumns            = []string{"id", "title", "content", "user_id", "status", "created_at", "updated_at", "first_published_at", "content_updated_at"}
 	postColumnsWithoutDefault = []string{"id", "title", "content", "user_id"}
-	postColumnsWithDefault    = []string{"status", "created_at", "updated_at"}
+	postColumnsWithDefault    = []string{"status", "created_at", "updated_at", "first_published_at", "content_updated_at"}
 	postPrimaryKeyColumns     = []string{"id"}
 	postGeneratedColumns      = []string{}
 )

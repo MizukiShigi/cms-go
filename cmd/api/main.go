@@ -62,9 +62,9 @@ func main() {
 	// 投稿
 	postRouter := v1Router.PathPrefix("/posts").Subrouter()
 	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
-	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
-	postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
-	postRouter.HandleFunc("/{id}", postController.DeletePost).Methods("DELETE")
+	// postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
+	// postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
+	// postRouter.HandleFunc("/{id}", postController.DeletePost).Methods("DELETE")
 
 	srv := &http.Server{
 		Addr:         os.Getenv("PORT"),

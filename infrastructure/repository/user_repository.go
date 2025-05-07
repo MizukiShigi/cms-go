@@ -53,7 +53,7 @@ func (ur *UserRepository) FindByEmail(ctx context.Context, email valueobject.Ema
 	}, nil
 }
 
-func (ur *UserRepository) Save(ctx context.Context, user *entity.User) error {
+func (ur *UserRepository) Create(ctx context.Context, user *entity.User) error {
 	now := time.Now()
 	dbUser := &models.User{
 		ID:        user.ID.String(),

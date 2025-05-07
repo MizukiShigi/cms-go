@@ -17,9 +17,9 @@ type RegisterUserInput struct {
 }
 
 type RegisterUserOutput struct {
-	UserID string
-	Name   string
-	Email  string
+	ID    string
+	Name  string
+	Email string
 }
 
 type RegisterUserUsecase struct {
@@ -58,14 +58,14 @@ func (u *RegisterUserUsecase) Execute(ctx context.Context, input *RegisterUserIn
 		return nil, err
 	}
 
-	err = u.userRepository.Save(ctx, user)
+	err = u.userRepository.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
 	return &RegisterUserOutput{
-		UserID: user.ID.String(),
-		Name:   user.Name,
-		Email:  user.Email.String(),
+		ID:    user.ID.String(),
+		Name:  user.Name,
+		Email: user.Email.String(),
 	}, nil
 }

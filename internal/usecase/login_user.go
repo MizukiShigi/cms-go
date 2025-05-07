@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
 	"github.com/MizukiShigi/cms-go/internal/domain/service"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
@@ -16,10 +16,10 @@ type LoginUserInput struct {
 
 type LoginUserOutput struct {
 	Token string
-	User  UserOutput
+	User  UserDTO
 }
 
-type UserOutput struct {
+type UserDTO struct {
 	ID    string
 	Name  string
 	Email string
@@ -49,7 +49,7 @@ func (u *LoginUserUsecase) Execute(ctx context.Context, input *LoginUserInput) (
 	}
 
 	if user == nil {
-		return nil, myerror.NewMyError(myerror.NotFoundCode, "user not found")
+		return nil, errors.New("user not found")
 	}
 
 	token, err := u.authService.GenerateToken(ctx, user.ID, user.Email)
@@ -59,7 +59,7 @@ func (u *LoginUserUsecase) Execute(ctx context.Context, input *LoginUserInput) (
 
 	return &LoginUserOutput{
 		Token: token,
-		User: UserOutput{
+		User: UserDTO{
 			ID:    user.ID.String(),
 			Name:  user.Name,
 			Email: user.Email.String(),

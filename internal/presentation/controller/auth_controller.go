@@ -64,7 +64,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userResponse := UserResponse{
-		ID:    output.UserID,
+		ID:    output.ID,
 		Name:  output.Name,
 		Email: output.Email,
 	}

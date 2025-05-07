@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"slices"
 	"time"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
@@ -16,6 +17,7 @@ type Post struct {
 	ContentUpdatedAt time.Time
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
+	Tags             []valueobject.Tag
 }
 
 // 新規投稿作成
@@ -55,6 +57,21 @@ func ParsePost(
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,
 	}
+}
+
+func (p *Post) AddTag(tag valueobject.Tag) error {
+	// タグの重複チェック
+	if slices.Contains(p.Tags, tag) {
+		return myerror.NewMyError(myerror.InvalidRequestCode, "Tag already exists")
+	}
+
+	// 最大タグ数チェック
+	if len(p.Tags) >= 10 {
+		return myerror.NewMyError(myerror.InvalidRequestCode, "Maximum number of tags reached")
+	}
+
+	p.Tags = append(p.Tags, tag)
+	return nil
 }
 
 /**

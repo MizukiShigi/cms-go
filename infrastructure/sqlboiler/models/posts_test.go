@@ -999,7 +999,7 @@ func testPostsSelect(t *testing.T) {
 }
 
 var (
-	postDBTypes = map[string]string{`ID`: `uuid`, `Title`: `character varying`, `Content`: `text`, `UserID`: `uuid`, `Status`: `character varying`, `CreatedAt`: `timestamp with time zone`, `UpdatedAt`: `timestamp with time zone`}
+	postDBTypes = map[string]string{`ID`: `uuid`, `Title`: `character varying`, `Content`: `text`, `UserID`: `uuid`, `Status`: `character varying`, `CreatedAt`: `timestamp with time zone`, `UpdatedAt`: `timestamp with time zone`, `FirstPublishedAt`: `timestamp with time zone`, `ContentUpdatedAt`: `timestamp with time zone`}
 	_           = bytes.MinRead
 )
 

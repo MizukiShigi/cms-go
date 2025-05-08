@@ -91,8 +91,8 @@ func (p *Post) Publish() error {
 		p.FirstPublishedAt = time.Now()
 	}
 
+	p.Status = valueobject.StatusPublished
 	p.ContentUpdatedAt = time.Now()
-
 	return nil
 }
 

@@ -60,7 +60,7 @@ func (e *MyError) StatusCode() int {
 	}
 }
 
-func IsDomainError(err error) bool {
+func IsMyError(err error) bool {
 	var domainErr *MyError
 	return errors.As(err, &domainErr)
 }

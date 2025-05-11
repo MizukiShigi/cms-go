@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/MizukiShigi/cms-go/infrastructure/sqlboiler/models"
+	"github.com/MizukiShigi/cms-go/infrastructure/db/sqlboiler/models"
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
 	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"

@@ -1,5 +1,5 @@
 # sqlboiler.toml
-output = "infrastructure/sqlboiler/models"
+output = "infrastructure/db/sqlboiler/models"
 pkgname = "models"
 no-tests = false
 add-global-variants = true

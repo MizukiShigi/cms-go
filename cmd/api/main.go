@@ -37,6 +37,7 @@ func main() {
 
 	// リポジトリ初期化
 	userRepository := repository.NewUserRepository(db)
+	postRepository := repository.NewPostRepository(db)
 
 	// サービス初期化
 	authService := auth.NewJWTService(os.Getenv("JWT_SECRET_KEY"))
@@ -44,9 +45,11 @@ func main() {
 	// ユースケース初期化
 	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
 	loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
+	createPostUsecase := usecase.NewCreatePostUsecase(postRepository)
 
 	// コントローラー初期化
 	authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
+	postController := controller.NewPostController(createPostUsecase)
 
 	// ルーティング設定
 	router := mux.NewRouter()
@@ -62,9 +65,6 @@ func main() {
 	// 投稿
 	postRouter := v1Router.PathPrefix("/posts").Subrouter()
 	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
-	// postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
-	// postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
-	// postRouter.HandleFunc("/{id}", postController.DeletePost).Methods("DELETE")
 
 	srv := &http.Server{
 		Addr:         os.Getenv("PORT"),

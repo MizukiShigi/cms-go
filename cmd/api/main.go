@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,15 +14,26 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/MizukiShigi/cms-go/infrastructure/auth"
+	"github.com/MizukiShigi/cms-go/infrastructure/logger"
 	"github.com/MizukiShigi/cms-go/infrastructure/repository"
 	"github.com/MizukiShigi/cms-go/internal/presentation/controller"
+	"github.com/MizukiShigi/cms-go/internal/presentation/middleware"
+
 	"github.com/MizukiShigi/cms-go/internal/usecase"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	// 開発環境用環境変数ファイル読み込み
 	loadDevelopEnv()
+
+	// ロギング設定
+	baseHadler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+	})
+	customHandler := logger.NewHandler(baseHadler)
+	slog.SetDefault(slog.New(customHandler))
 
 	// DBセットアップ
 	db, err := sql.Open("postgres", os.Getenv("DB_URL"))
@@ -53,6 +65,9 @@ func main() {
 
 	// ルーティング設定
 	router := mux.NewRouter()
+
+	// ミドルウェア設定
+	router.Use(middleware.LoggingMiddleware)
 
 	// バージョニング
 	v1Router := router.PathPrefix("/cms/v1").Subrouter()

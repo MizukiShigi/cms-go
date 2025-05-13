@@ -45,7 +45,6 @@ func AuthMiddleware(secretKey string) func(http.Handler) http.Handler {
 			// 検証されたクレームをログコンテキストに追加
 			ctx = domaincontext.WithValue(ctx, "user_id", claimUserID)
 
-			// 認証済みリクエストで次のハンドラーを呼び出す
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

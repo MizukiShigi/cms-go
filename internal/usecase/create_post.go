@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
 	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
@@ -13,6 +15,7 @@ type CreatePostInput struct {
 	Title   string
 	Content string
 	Tags    []string
+	UserID  string
 }
 
 type CreatePostOutput struct {
@@ -20,6 +23,7 @@ type CreatePostOutput struct {
 	Title   string
 	Content string
 	Tags    []string
+	UserID  string
 }
 
 type CreatePostUsecase struct {
@@ -41,7 +45,12 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid content")
 	}
 
-	post, err := entity.NewPost(title, content)
+	userID, err := valueobject.ParseUserID(input.UserID)
+	if err != nil {
+		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid user ID")
+	}
+
+	post, err := entity.NewPost(title, content, userID)
 	if err != nil {
 		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid content")
 	}
@@ -55,7 +64,9 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 
 	err = u.postRepository.Create(ctx, post)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to create post")
+		errMsg := "Failed to create post"
+		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", errMsg, err))
+		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, errMsg)
 	}
 
 	tags := make([]string, 0, len(post.Tags))
@@ -68,5 +79,6 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 		Title:   post.Title.String(),
 		Content: post.Content.String(),
 		Tags:    tags,
+		UserID:  post.UserID.String(),
 	}, nil
 }

@@ -19,7 +19,6 @@ const (
 var (
 	InvalidRequestError = NewMyError(InvalidRequestCode, "Invalid request")
 	InternalServerError = NewMyError(InternalServerErrorCode, "Internal server error")
-	UnauthorizedError   = NewMyError(UnauthorizedCode, "Unauthorized")
 	ForbiddenError      = NewMyError(ForbiddenCode, "Forbidden")
 	NotFoundError       = NewMyError(NotFoundCode, "Not found")
 	ConflictError       = NewMyError(ConflictCode, "Conflict")

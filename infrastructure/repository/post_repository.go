@@ -25,6 +25,7 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) error {
 		ID:               post.ID.String(),
 		Title:            post.Title.String(),
 		Content:          post.Content.String(),
+		UserID:           post.UserID.String(),
 		CreatedAt:        now,
 		UpdatedAt:        now,
 		FirstPublishedAt: ToNullable(

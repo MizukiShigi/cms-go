@@ -64,26 +64,33 @@ func main() {
 	postController := controller.NewPostController(createPostUsecase)
 
 	// ルーティング設定
-	router := mux.NewRouter()
+	r := mux.NewRouter()
 
-	// ミドルウェア設定
-	router.Use(middleware.LoggingMiddleware)
+	// 全てのリクエストにミドルウェア設定
+	r.Use(middleware.LoggingMiddleware)
 
 	// バージョニング
-	v1Router := router.PathPrefix("/cms/v1").Subrouter()
+	v1Router := r.PathPrefix("/cms/v1").Subrouter()
+
+	// 認証不要エンドポイント
+	publicV1Router := v1Router.PathPrefix("/").Subrouter()
 
 	// 認証
-	authRouter := v1Router.PathPrefix("/auth").Subrouter()
+	authRouter := publicV1Router.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/register", authController.Register).Methods("POST")
 	authRouter.HandleFunc("/login", authController.Login).Methods("POST")
 
+	// 認証必須エンドポイント
+	protectedV1Router := v1Router.PathPrefix("/").Subrouter()
+	protectedV1Router.Use(middleware.AuthMiddleware(os.Getenv("JWT_SECRET_KEY")))
+
 	// 投稿
-	postRouter := v1Router.PathPrefix("/posts").Subrouter()
+	postRouter := protectedV1Router.PathPrefix("/posts").Subrouter()
 	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
 
 	srv := &http.Server{
 		Addr:         os.Getenv("PORT"),
-		Handler:      router,
+		Handler:      r,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,

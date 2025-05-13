@@ -12,6 +12,7 @@ type Post struct {
 	ID               valueobject.PostID
 	Title            valueobject.PostTitle
 	Content          valueobject.PostContent
+	UserID           valueobject.UserID
 	Status           valueobject.PostStatus
 	FirstPublishedAt time.Time
 	ContentUpdatedAt time.Time
@@ -21,12 +22,13 @@ type Post struct {
 }
 
 // 新規投稿作成
-func NewPost(title valueobject.PostTitle, content valueobject.PostContent) (*Post, error) {
+func NewPost(title valueobject.PostTitle, content valueobject.PostContent, userID valueobject.UserID) (*Post, error) {
 	now := time.Now()
 	post := &Post{
 		ID:               valueobject.NewPostID(),
 		Title:            title,
 		Content:          content,
+		UserID:           userID,
 		Status:           valueobject.StatusDraft,
 		ContentUpdatedAt: now,
 		CreatedAt:        now,
@@ -41,6 +43,7 @@ func ParsePost(
 	id valueobject.PostID,
 	title valueobject.PostTitle,
 	content valueobject.PostContent,
+	userID valueobject.UserID,
 	status valueobject.PostStatus,
 	firstPublishedAt time.Time,
 	contentUpdatedAt time.Time,
@@ -51,6 +54,7 @@ func ParsePost(
 		ID:               id,
 		Title:            title,
 		Content:          content,
+		UserID:           userID,
 		Status:           status,
 		FirstPublishedAt: firstPublishedAt,
 		ContentUpdatedAt: contentUpdatedAt,

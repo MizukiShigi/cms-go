@@ -19,7 +19,7 @@ func NewHandler(handler slog.Handler) slog.Handler {
 }
 
 func (h Handler) Handle(ctx context.Context, record slog.Record) error {
-	if v, ok := ctx.Value(domaincontext.Fields).(*sync.Map); ok {
+	if v, ok := ctx.Value(domaincontext.Logging).(*sync.Map); ok {
 		v.Range(func(k, v any) bool {
 			if k, ok := k.(string); ok {
 				record.AddAttrs(slog.Any(k, v))

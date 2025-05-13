@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -31,8 +32,18 @@ func AuthMiddleware(secretKey string) func(http.Handler) http.Handler {
 				return
 			}
 
+			claimUserID, ok := claims["user_id"].(string)
+			if !ok {
+				myerr := myerror.NewMyError(myerror.UnauthorizedCode, "user_idが文字列ではありません")
+				helper.RespondWithError(w, myerr)
+				return
+			}
+
+			// 検証されたクレームをコンテキストに追加
+			ctx := context.WithValue(r.Context(), domaincontext.UserID, claimUserID)
+
 			// 検証されたクレームをログコンテキストに追加
-			ctx := domaincontext.WithValue(r.Context(), "user_id", claims["user_id"])
+			ctx = domaincontext.WithValue(ctx, "user_id", claimUserID)
 
 			// 認証済みリクエストで次のハンドラーを呼び出す
 			next.ServeHTTP(w, r.WithContext(ctx))

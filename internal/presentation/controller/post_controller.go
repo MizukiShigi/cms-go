@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -102,6 +101,22 @@ func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
 		helper.RespondWithError(w, err)
 		return
 	}
-	fmt.Println(output)
-	helper.RespondWithJSON(w, http.StatusOK, output)
+
+	// 配列で返したいので、nilの場合は空配列を返す
+	tags := []string{}
+	if output.Tags != nil {
+		tags = output.Tags
+	}
+
+	res := GetPostResponse{
+		ID:               output.ID,
+		Title:            output.Title,
+		Content:          output.Content,
+		Status:           output.Status,
+		Tags:             tags,
+		FirstPublishedAt: output.FirstPublishedAt,
+		ContentUpdatedAt: output.ContentUpdatedAt,
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, res)
 }

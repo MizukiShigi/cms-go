@@ -12,7 +12,7 @@ var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-
 
 func NewEmail(email string) (Email, error) {
 	if !emailRegex.MatchString(email) {
-		return Email(""), myerror.NewMyError(myerror.InvalidRequestCode, "Invalid email format")
+		return Email(""), myerror.NewMyError(myerror.InvalidCode, "Invalid email format")
 	}
 	return Email(email), nil
 }

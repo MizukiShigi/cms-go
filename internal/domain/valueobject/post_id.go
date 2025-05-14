@@ -1,6 +1,9 @@
 package valueobject
 
-import "github.com/google/uuid"
+import (
+	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
+	"github.com/google/uuid"
+)
 
 type PostID string
 
@@ -19,7 +22,7 @@ func (p PostID) Equals(other PostID) bool {
 func ParsePostID(s string) (PostID, error) {
 	uuid, err := uuid.Parse(s)
 	if err != nil {
-		return PostID(""), err
+		return PostID(""), myerror.NewMyError(myerror.InvalidCode, "Invalid post ID")
 	}
 
 	return PostID(uuid.String()), nil

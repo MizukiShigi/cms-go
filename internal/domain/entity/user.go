@@ -3,8 +3,8 @@ package entity
 import (
 	"time"
 
-	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
+	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,11 +19,11 @@ type User struct {
 
 func NewUser(name string, email valueobject.Email, password string) (*User, error) {
 	if name == "" {
-		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Name cannot be empty")
+		return nil, myerror.NewMyError(myerror.InvalidCode, "Name cannot be empty")
 	}
 
 	if len(password) < 8 {
-		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Password must be at least 8 characters")
+		return nil, myerror.NewMyError(myerror.InvalidCode, "Password must be at least 8 characters")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

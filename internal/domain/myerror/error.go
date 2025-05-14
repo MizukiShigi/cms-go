@@ -8,7 +8,7 @@ import (
 type Code string
 
 const (
-	InvalidRequestCode      Code = "INVALID_REQUEST"
+	InvalidCode             Code = "INVALID"
 	InternalServerErrorCode Code = "INTERNAL_SERVER_ERROR"
 	UnauthorizedCode        Code = "UNAUTHORIZED"
 	ForbiddenCode           Code = "FORBIDDEN"
@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	InvalidRequestError = NewMyError(InvalidRequestCode, "Invalid request")
+	InvalidRequestError = NewMyError(InvalidCode, "Invalid request")
 	InternalServerError = NewMyError(InternalServerErrorCode, "Internal server error")
 	ForbiddenError      = NewMyError(ForbiddenCode, "Forbidden")
 	NotFoundError       = NewMyError(NotFoundCode, "Not found")
@@ -42,7 +42,7 @@ func (e *MyError) Error() string {
 
 func (e *MyError) StatusCode() int {
 	switch e.Code {
-	case InvalidRequestCode:
+	case InvalidCode:
 		return http.StatusBadRequest
 	case InternalServerErrorCode:
 		return http.StatusInternalServerError

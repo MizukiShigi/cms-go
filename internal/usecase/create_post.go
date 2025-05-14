@@ -37,27 +37,27 @@ func NewCreatePostUsecase(postRepository repository.PostRepository) *CreatePostU
 func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput) (*CreatePostOutput, error) {
 	title, err := valueobject.NewPostTitle(input.Title)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid title")
+		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid title")
 	}
 
 	content, err := valueobject.NewPostContent(input.Content)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid content")
+		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid content")
 	}
 
 	userID, err := valueobject.ParseUserID(input.UserID)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid user ID")
+		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid user ID")
 	}
 
 	post, err := entity.NewPost(title, content, userID)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid content")
+		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid content")
 	}
 	for _, tag := range input.Tags {
 		tag, err := valueobject.NewTag(tag)
 		if err != nil {
-			return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid tag")
+			return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid tag")
 		}
 		post.AddTag(tag)
 	}

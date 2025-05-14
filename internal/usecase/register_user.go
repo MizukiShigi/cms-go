@@ -35,7 +35,7 @@ func NewRegisterUserUsecase(userRepository repository.UserRepository) *RegisterU
 func (u *RegisterUserUsecase) Execute(ctx context.Context, input *RegisterUserInput) (*RegisterUserOutput, error) {
 	email, err := valueobject.NewEmail(input.Email)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidRequestCode, "Invalid email")
+		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid email")
 	}
 
 	existingUser, err := u.userRepository.FindByEmail(ctx, email)

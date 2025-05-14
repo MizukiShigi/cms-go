@@ -14,10 +14,10 @@ type Post struct {
 	Content          valueobject.PostContent
 	UserID           valueobject.UserID
 	Status           valueobject.PostStatus
-	FirstPublishedAt time.Time
-	ContentUpdatedAt time.Time
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
+	FirstPublishedAt *time.Time
+	ContentUpdatedAt *time.Time
 	Tags             []valueobject.Tag
 }
 
@@ -30,7 +30,7 @@ func NewPost(title valueobject.PostTitle, content valueobject.PostContent, userI
 		Content:          content,
 		UserID:           userID,
 		Status:           valueobject.StatusDraft,
-		ContentUpdatedAt: now,
+		ContentUpdatedAt: &now,
 		CreatedAt:        now,
 		UpdatedAt:        now,
 	}
@@ -45,10 +45,11 @@ func ParsePost(
 	content valueobject.PostContent,
 	userID valueobject.UserID,
 	status valueobject.PostStatus,
-	firstPublishedAt time.Time,
-	contentUpdatedAt time.Time,
 	createdAt time.Time,
 	updatedAt time.Time,
+	firstPublishedAt *time.Time,
+	contentUpdatedAt *time.Time,
+	tags []valueobject.Tag,
 ) *Post {
 	return &Post{
 		ID:               id,
@@ -56,22 +57,23 @@ func ParsePost(
 		Content:          content,
 		UserID:           userID,
 		Status:           status,
-		FirstPublishedAt: firstPublishedAt,
-		ContentUpdatedAt: contentUpdatedAt,
 		CreatedAt:        createdAt,
 		UpdatedAt:        updatedAt,
+		FirstPublishedAt: firstPublishedAt,
+		ContentUpdatedAt: contentUpdatedAt,
+		Tags:             tags,
 	}
 }
 
 func (p *Post) AddTag(tag valueobject.Tag) error {
 	// タグの重複チェック
 	if slices.Contains(p.Tags, tag) {
-		return myerror.NewMyError(myerror.InvalidRequestCode, "Tag already exists")
+		return myerror.NewMyError(myerror.InvalidCode, "Tag already exists")
 	}
 
 	// 最大タグ数チェック
 	if len(p.Tags) >= 10 {
-		return myerror.NewMyError(myerror.InvalidRequestCode, "Maximum number of tags reached")
+		return myerror.NewMyError(myerror.InvalidCode, "Maximum number of tags reached")
 	}
 
 	p.Tags = append(p.Tags, tag)
@@ -86,36 +88,36 @@ func (p *Post) AddTag(tag valueobject.Tag) error {
  */
 func (p *Post) Publish() error {
 	if p.Status != valueobject.StatusDraft && p.Status != valueobject.StatusPrivate {
-		return myerror.NewMyError(myerror.InvalidRequestCode, "Only draft and private posts can be published")
+		return myerror.NewMyError(myerror.InvalidCode, "Only draft and private posts can be published")
 	}
 
 	p.Status = valueobject.StatusPublished
 
 	if p.FirstPublishedAt.IsZero() {
-		p.FirstPublishedAt = time.Now()
+		*p.FirstPublishedAt = time.Now()
 	}
 
 	p.Status = valueobject.StatusPublished
-	p.ContentUpdatedAt = time.Now()
+	*p.ContentUpdatedAt = time.Now()
 	return nil
 }
 
 func (p *Post) Private() error {
 	if p.Status != valueobject.StatusPublished {
-		return myerror.NewMyError(myerror.InvalidRequestCode, "Only published posts can be private")
+		return myerror.NewMyError(myerror.InvalidCode, "Only published posts can be private")
 	}
 
 	p.Status = valueobject.StatusPrivate
-	p.ContentUpdatedAt = time.Now()
+	*p.ContentUpdatedAt = time.Now()
 	return nil
 }
 
 func (p *Post) Delete() error {
 	if p.Status != valueobject.StatusDraft && p.Status != valueobject.StatusPrivate {
-		return myerror.NewMyError(myerror.InvalidRequestCode, "Only draft and private posts can be deleted")
+		return myerror.NewMyError(myerror.InvalidCode, "Only draft and private posts can be deleted")
 	}
 
 	p.Status = valueobject.StatusDeleted
-	p.ContentUpdatedAt = time.Now()
+	*p.ContentUpdatedAt = time.Now()
 	return nil
 }

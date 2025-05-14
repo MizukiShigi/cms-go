@@ -5,10 +5,10 @@ import "github.com/MizukiShigi/cms-go/internal/domain/myerror"
 type PostStatus string
 
 const (
-	StatusDraft     PostStatus = "DRAFT"
-	StatusPublished PostStatus = "PUBLISHED"
-	StatusPrivate   PostStatus = "PRIVATE"
-	StatusDeleted   PostStatus = "DELETED"
+	StatusDraft     PostStatus = "draft"
+	StatusPublished PostStatus = "published"
+	StatusPrivate   PostStatus = "private"
+	StatusDeleted   PostStatus = "deleted"
 )
 
 func NewPostStatus(status string) (PostStatus, error) {
@@ -16,7 +16,7 @@ func NewPostStatus(status string) (PostStatus, error) {
 	case StatusDraft, StatusPublished, StatusPrivate, StatusDeleted:
 		return PostStatus(status), nil
 	default:
-		return PostStatus(""), myerror.NewMyError(myerror.InvalidRequestCode, "Invalid post status")
+		return PostStatus(""), myerror.NewMyError(myerror.InvalidCode, "Invalid post status")
 	}
 }
 

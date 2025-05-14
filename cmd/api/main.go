@@ -58,10 +58,11 @@ func main() {
 	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
 	loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
 	createPostUsecase := usecase.NewCreatePostUsecase(postRepository)
+	getPostUsecase := usecase.NewGetPostUsecase(postRepository)
 
 	// コントローラー初期化
 	authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
-	postController := controller.NewPostController(createPostUsecase)
+	postController := controller.NewPostController(createPostUsecase, getPostUsecase)
 
 	// ルーティング設定
 	r := mux.NewRouter()
@@ -87,7 +88,7 @@ func main() {
 	// 投稿
 	postRouter := protectedV1Router.PathPrefix("/posts").Subrouter()
 	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
-
+	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
 	srv := &http.Server{
 		Addr:         os.Getenv("PORT"),
 		Handler:      r,

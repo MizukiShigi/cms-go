@@ -22,37 +22,6 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (ur *UserRepository) FindByEmail(ctx context.Context, email valueobject.Email) (*entity.User, error) {
-	dbUser, err := models.Users(qm.Where(models.UserColumns.Email+" = ?", email.String())).One(ctx, ur.db)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, myerror.NewMyError(myerror.NotFoundCode, "User not found")
-		}
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to find user")
-	}
-
-	voUserID, err := valueobject.ParseUserID(dbUser.ID)
-	if err != nil {
-		// TODO: 本来起こり得ないエラーなのでログ出力
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to parse user ID")
-	}
-
-	voEmail, err := valueobject.NewEmail(dbUser.Email)
-	if err != nil {
-		// TODO: 本来起こり得ないエラーなのでログ出力
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to parse email")
-	}
-
-	return &entity.User{
-		ID:        voUserID,
-		Name:      dbUser.Name,
-		Email:     voEmail,
-		Password:  dbUser.Password,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
-	}, nil
-}
-
 func (ur *UserRepository) Create(ctx context.Context, user *entity.User) error {
 	now := time.Now()
 	dbUser := &models.User{
@@ -73,4 +42,33 @@ func (ur *UserRepository) Create(ctx context.Context, user *entity.User) error {
 	}
 
 	return nil
+}
+
+func (ur *UserRepository) FindByEmail(ctx context.Context, email valueobject.Email) (*entity.User, error) {
+	dbUser, err := models.Users(qm.Where(models.UserColumns.Email+" = ?", email.String())).One(ctx, ur.db)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, myerror.NewMyError(myerror.NotFoundCode, "User not found")
+		}
+		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to find user")
+	}
+
+	voUserID, err := valueobject.ParseUserID(dbUser.ID)
+	if err != nil {
+		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to parse user ID")
+	}
+
+	voEmail, err := valueobject.NewEmail(dbUser.Email)
+	if err != nil {
+		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to parse email")
+	}
+
+	return &entity.User{
+		ID:        voUserID,
+		Name:      dbUser.Name,
+		Email:     voEmail,
+		Password:  dbUser.Password,
+		CreatedAt: dbUser.CreatedAt,
+		UpdatedAt: dbUser.UpdatedAt,
+	}, nil
 }

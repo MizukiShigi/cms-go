@@ -46,7 +46,7 @@ type UserResponse struct {
 func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		MyError := myerror.NewMyError(myerror.InvalidRequestCode, "Invalid request payload")
+		MyError := myerror.NewMyError(myerror.InvalidCode, "Invalid request payload")
 		helper.RespondWithError(w, MyError)
 		return
 	}
@@ -75,7 +75,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		MyError := myerror.NewMyError(myerror.InvalidRequestCode, "Invalid request payload")
+		MyError := myerror.NewMyError(myerror.InvalidCode, "Invalid request payload")
 		helper.RespondWithError(w, MyError)
 		return
 	}

@@ -2,13 +2,34 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	domaincontext "github.com/MizukiShigi/cms-go/internal/domain/context"
 	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/presentation/helper"
 	"github.com/MizukiShigi/cms-go/internal/usecase"
+	"github.com/gorilla/mux"
 )
+
+type PostController struct {
+	createPostUsecase *usecase.CreatePostUsecase
+	getPostUsecase    *usecase.GetPostUsecase
+}
+
+func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase) *PostController {
+	return &PostController{
+		createPostUsecase: createPostUsecase,
+		getPostUsecase:    getPostUsecase,
+	}
+}
+
+type Post struct {
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    []string `json:"tags"`
+}
 
 type CreatePostRequest struct {
 	Title   string   `json:"title"`
@@ -23,16 +44,6 @@ type CreatePostResponse struct {
 	Tags    []string `json:"tags"`
 }
 
-type PostController struct {
-	createPostUsecase *usecase.CreatePostUsecase
-}
-
-func NewPostController(createPostUsecase *usecase.CreatePostUsecase) *PostController {
-	return &PostController{
-		createPostUsecase: createPostUsecase,
-	}
-}
-
 func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 	userID, err := domaincontext.GetUserID(r.Context())
 	if err != nil {
@@ -43,7 +54,7 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 	var req CreatePostRequest
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		MyError := myerror.NewMyError(myerror.InvalidRequestCode, "Invalid request payload")
+		MyError := myerror.NewMyError(myerror.InvalidCode, "Invalid request payload")
 		helper.RespondWithError(w, MyError)
 		return
 	}
@@ -69,4 +80,28 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helper.RespondWithJSON(w, http.StatusCreated, createPostResponse)
+}
+
+type GetPostResponse struct {
+	ID               string     `json:"id"`
+	Title            string     `json:"title"`
+	Content          string     `json:"content"`
+	Status           string     `json:"status"`
+	Tags             []string   `json:"tags"`
+	FirstPublishedAt *time.Time `json:"first_published_at"`
+	ContentUpdatedAt *time.Time `json:"content_updated_at"`
+}
+
+func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	input := &usecase.GetPostInput{ID: id}
+	output, err := pc.getPostUsecase.Execute(r.Context(), input)
+	if err != nil {
+		helper.RespondWithError(w, err)
+		return
+	}
+	fmt.Println(output)
+	helper.RespondWithJSON(w, http.StatusOK, output)
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt"
 
 	domaincontext "github.com/MizukiShigi/cms-go/internal/domain/context"
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
+	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/MizukiShigi/cms-go/internal/presentation/helper"
 )
 
@@ -19,7 +19,7 @@ func AuthMiddleware(secretKey string) func(http.Handler) http.Handler {
 			// Authorization ヘッダーからトークンを抽出
 			tokenString, err := extractTokenFromHeader(r)
 			if err != nil {
-				myerr := myerror.NewMyError(myerror.UnauthorizedCode, err.Error())
+				myerr := valueobject.NewMyError(valueobject.UnauthorizedCode, err.Error())
 				helper.RespondWithError(w, myerr)
 				return
 			}
@@ -27,14 +27,14 @@ func AuthMiddleware(secretKey string) func(http.Handler) http.Handler {
 			// JWT トークンを解析・検証
 			claims, err := validateToken(tokenString, secretKey)
 			if err != nil {
-				myerr := myerror.NewMyError(myerror.UnauthorizedCode, err.Error())
+				myerr := valueobject.NewMyError(valueobject.UnauthorizedCode, err.Error())
 				helper.RespondWithError(w, myerr)
 				return
 			}
 
 			claimUserID, ok := claims["user_id"].(string)
 			if !ok {
-				myerr := myerror.NewMyError(myerror.UnauthorizedCode, "user_idが文字列ではありません")
+				myerr := valueobject.NewMyError(valueobject.UnauthorizedCode, "user_idが文字列ではありません")
 				helper.RespondWithError(w, myerr)
 				return
 			}

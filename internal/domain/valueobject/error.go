@@ -1,4 +1,4 @@
-package myerror
+package valueobject
 
 import (
 	"errors"

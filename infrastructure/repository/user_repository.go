@@ -7,7 +7,6 @@ import (
 
 	"github.com/MizukiShigi/cms-go/infrastructure/db/sqlboiler/models"
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/lib/pq"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -36,9 +35,9 @@ func (ur *UserRepository) Create(ctx context.Context, user *entity.User) error {
 	if err := dbUser.Insert(ctx, ur.db, boil.Infer()); err != nil {
 		// PostgreSQLの一意制約違反のエラーをチェック
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
-			return myerror.NewMyError(myerror.ConflictCode, "User with this email already exists")
+			return valueobject.NewMyError(valueobject.ConflictCode, "User with this email already exists")
 		}
-		return myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to save user")
+		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to save user")
 	}
 
 	return nil
@@ -48,19 +47,19 @@ func (ur *UserRepository) FindByEmail(ctx context.Context, email valueobject.Ema
 	dbUser, err := models.Users(qm.Where(models.UserColumns.Email+" = ?", email.String())).One(ctx, ur.db)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, myerror.NewMyError(myerror.NotFoundCode, "User not found")
+			return nil, valueobject.NewMyError(valueobject.NotFoundCode, "User not found")
 		}
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to find user")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to find user")
 	}
 
 	voUserID, err := valueobject.ParseUserID(dbUser.ID)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to parse user ID")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to parse user ID")
 	}
 
 	voEmail, err := valueobject.NewEmail(dbUser.Email)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to parse email")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to parse email")
 	}
 
 	return &entity.User{

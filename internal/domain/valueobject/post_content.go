@@ -1,12 +1,10 @@
 package valueobject
 
-import "github.com/MizukiShigi/cms-go/internal/domain/myerror"
-
 type PostContent string
 
 func NewPostContent(content string) (PostContent, error) {
 	if len(content) > 10000 {
-		return PostContent(""), myerror.NewMyError(myerror.InvalidCode, "Content is too long")
+		return PostContent(""), NewMyError(InvalidCode, "Content is too long")
 	}
 	return PostContent(content), nil
 }

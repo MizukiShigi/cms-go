@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
+	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/MizukiShigi/cms-go/internal/presentation/helper"
 	"github.com/MizukiShigi/cms-go/internal/usecase"
 )
@@ -46,7 +46,7 @@ type UserResponse struct {
 func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		MyError := myerror.NewMyError(myerror.InvalidCode, "Invalid request payload")
+		MyError := valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload")
 		helper.RespondWithError(w, MyError)
 		return
 	}
@@ -75,7 +75,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		MyError := myerror.NewMyError(myerror.InvalidCode, "Invalid request payload")
+		MyError := valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload")
 		helper.RespondWithError(w, MyError)
 		return
 	}

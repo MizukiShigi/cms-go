@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 )
@@ -35,22 +34,22 @@ func NewRegisterUserUsecase(userRepository repository.UserRepository) *RegisterU
 func (u *RegisterUserUsecase) Execute(ctx context.Context, input *RegisterUserInput) (*RegisterUserOutput, error) {
 	email, err := valueobject.NewEmail(input.Email)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid email")
+		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid email")
 	}
 
 	existingUser, err := u.userRepository.FindByEmail(ctx, email)
 	if err != nil {
-		var myErr *myerror.MyError
+		var myErr *valueobject.MyError
 		if !errors.As(err, &myErr) {
-			return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to find user")
+			return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to find user")
 		}
-		if myErr.Code != myerror.NotFoundCode {
+		if myErr.Code != valueobject.NotFoundCode {
 			// 独自エラーのユーザーが存在しない場合のエラーのみ登録処理を続行
 			return nil, err
 		}
 	}
 	if existingUser != nil {
-		return nil, myerror.NewMyError(myerror.ConflictCode, "User already exists")
+		return nil, valueobject.NewMyError(valueobject.ConflictCode, "User already exists")
 	}
 
 	user, err := entity.NewUser(input.Name, email, input.Password)

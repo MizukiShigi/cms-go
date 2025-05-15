@@ -4,7 +4,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 )
 
@@ -68,12 +67,12 @@ func ParsePost(
 func (p *Post) AddTag(tag valueobject.Tag) error {
 	// タグの重複チェック
 	if slices.Contains(p.Tags, tag) {
-		return myerror.NewMyError(myerror.InvalidCode, "Tag already exists")
+		return valueobject.NewMyError(valueobject.InvalidCode, "Tag already exists")
 	}
 
 	// 最大タグ数チェック
 	if len(p.Tags) >= 10 {
-		return myerror.NewMyError(myerror.InvalidCode, "Maximum number of tags reached")
+		return valueobject.NewMyError(valueobject.InvalidCode, "Maximum number of tags reached")
 	}
 
 	p.Tags = append(p.Tags, tag)
@@ -88,7 +87,7 @@ func (p *Post) AddTag(tag valueobject.Tag) error {
  */
 func (p *Post) Publish() error {
 	if p.Status != valueobject.StatusDraft && p.Status != valueobject.StatusPrivate {
-		return myerror.NewMyError(myerror.InvalidCode, "Only draft and private posts can be published")
+		return valueobject.NewMyError(valueobject.InvalidCode, "Only draft and private posts can be published")
 	}
 
 	p.Status = valueobject.StatusPublished
@@ -104,7 +103,7 @@ func (p *Post) Publish() error {
 
 func (p *Post) Private() error {
 	if p.Status != valueobject.StatusPublished {
-		return myerror.NewMyError(myerror.InvalidCode, "Only published posts can be private")
+		return valueobject.NewMyError(valueobject.InvalidCode, "Only published posts can be private")
 	}
 
 	p.Status = valueobject.StatusPrivate
@@ -114,7 +113,7 @@ func (p *Post) Private() error {
 
 func (p *Post) Delete() error {
 	if p.Status != valueobject.StatusDraft && p.Status != valueobject.StatusPrivate {
-		return myerror.NewMyError(myerror.InvalidCode, "Only draft and private posts can be deleted")
+		return valueobject.NewMyError(valueobject.InvalidCode, "Only draft and private posts can be deleted")
 	}
 
 	p.Status = valueobject.StatusDeleted

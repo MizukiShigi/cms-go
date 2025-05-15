@@ -1,7 +1,6 @@
 package valueobject
 
 import (
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/google/uuid"
 )
 
@@ -14,7 +13,7 @@ func NewUserID() UserID {
 func ParseUserID(s string) (UserID, error) {
 	uuid, err := uuid.Parse(s)
 	if err != nil {
-		return UserID(""), myerror.NewMyError(myerror.InvalidCode, "Invalid user ID")
+		return UserID(""), NewMyError(InvalidCode, "Invalid user ID")
 	}
 	return UserID(uuid.String()), nil
 }

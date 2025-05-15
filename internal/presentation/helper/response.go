@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
+	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 )
 
 func RespondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
@@ -21,12 +21,12 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 }
 
 func RespondWithError(w http.ResponseWriter, err error) {
-	var domainErr *myerror.MyError
+	var domainErr *valueobject.MyError
 	if errors.As(err, &domainErr) {
 		RespondWithJSON(w, domainErr.StatusCode(), domainErr)
 		return
 	}
 
-	MyError := myerror.InternalServerError
-	RespondWithJSON(w, MyError.StatusCode(), MyError)
+	myError := valueobject.InternalServerError
+	RespondWithJSON(w, myError.StatusCode(), myError)
 }

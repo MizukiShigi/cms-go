@@ -9,7 +9,6 @@ import (
 	"github.com/MizukiShigi/cms-go/infrastructure/db/sqlboiler/models"
 	domaincontext "github.com/MizukiShigi/cms-go/internal/domain/context"
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -45,7 +44,7 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) error {
 	}
 
 	if err := dbPost.Insert(ctx, r.db, boil.Infer()); err != nil {
-		return myerror.NewMyError(myerror.InternalServerErrorCode, "Failed to create post")
+		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to create post")
 	}
 
 	return nil
@@ -55,37 +54,37 @@ func (r *PostRepository) Get(ctx context.Context, id string) (*entity.Post, erro
 	dbPost, err := models.FindPost(ctx, r.db, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, myerror.NewMyError(myerror.NotFoundCode, "Post not found")
+			return nil, valueobject.NewMyError(valueobject.NotFoundCode, "Post not found")
 		}
 		errMsg := "Failed to find post"
 		ctx := domaincontext.WithValue(ctx, "error", err.Error())
 		slog.ErrorContext(ctx, errMsg)
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, errMsg)
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
 	}
 
 	voPostID, err := valueobject.ParsePostID(dbPost.ID)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Invalid post ID")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post ID")
 	}
 
 	voUserID, err := valueobject.ParseUserID(dbPost.UserID)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Invalid user ID")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid user ID")
 	}
 
 	voTitle, err := valueobject.NewPostTitle(dbPost.Title)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Invalid post title")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post title")
 	}
 
 	voContent, err := valueobject.NewPostContent(dbPost.Content)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Invalid post content")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post content")
 	}
 
 	voStatus, err := valueobject.NewPostStatus(dbPost.Status)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, "Invalid post status")
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post status")
 	}
 
 	firstPublishedAt := &dbPost.FirstPublishedAt.Time

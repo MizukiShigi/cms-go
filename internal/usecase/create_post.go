@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 )
@@ -37,27 +36,27 @@ func NewCreatePostUsecase(postRepository repository.PostRepository) *CreatePostU
 func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput) (*CreatePostOutput, error) {
 	title, err := valueobject.NewPostTitle(input.Title)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid title")
+		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid title")
 	}
 
 	content, err := valueobject.NewPostContent(input.Content)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid content")
+		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content")
 	}
 
 	userID, err := valueobject.ParseUserID(input.UserID)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid user ID")
+		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid user ID")
 	}
 
 	post, err := entity.NewPost(title, content, userID)
 	if err != nil {
-		return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid content")
+		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content")
 	}
 	for _, tag := range input.Tags {
 		tag, err := valueobject.NewTag(tag)
 		if err != nil {
-			return nil, myerror.NewMyError(myerror.InvalidCode, "Invalid tag")
+			return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid tag")
 		}
 		post.AddTag(tag)
 	}
@@ -66,7 +65,7 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 	if err != nil {
 		errMsg := "Failed to create post"
 		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", errMsg, err))
-		return nil, myerror.NewMyError(myerror.InternalServerErrorCode, errMsg)
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
 	}
 
 	tags := make([]string, 0, len(post.Tags))

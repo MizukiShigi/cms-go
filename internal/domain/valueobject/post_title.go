@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"html"
 	"strings"
-
-	"github.com/MizukiShigi/cms-go/internal/domain/myerror"
 )
 
 type PostTitle string
@@ -14,19 +12,19 @@ func NewPostTitle(title string) (PostTitle, error) {
 	normalizedTitle := strings.TrimSpace(title)
 
 	if len(normalizedTitle) > 200 {
-		return PostTitle(""), myerror.NewMyError(myerror.InvalidCode, "Title is too long")
+		return PostTitle(""), NewMyError(InvalidCode, "Title is too long")
 	}
 
 	sanitizedTitle := html.EscapeString(normalizedTitle)
 
 	if len(sanitizedTitle) > 255 {
-		return PostTitle(""), myerror.NewMyError(myerror.InvalidCode, "Title contains too many special characters that expand when escaped")
+		return PostTitle(""), NewMyError(InvalidCode, "Title contains too many special characters that expand when escaped")
 	}
 
 	forbiddenChars := []rune{'<', '>', '"', '\'', '\\', '/', '\n', '\r', '\t'}
 	for _, char := range forbiddenChars {
 		if strings.ContainsRune(sanitizedTitle, char) {
-			return PostTitle(""), myerror.NewMyError(myerror.InvalidCode, fmt.Sprintf("Title contains forbidden character: %q", char))
+			return PostTitle(""), NewMyError(InvalidCode, fmt.Sprintf("Title contains forbidden character: %q", char))
 		}
 	}
 

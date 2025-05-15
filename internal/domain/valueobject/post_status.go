@@ -1,7 +1,5 @@
 package valueobject
 
-import "github.com/MizukiShigi/cms-go/internal/domain/myerror"
-
 type PostStatus string
 
 const (
@@ -16,7 +14,7 @@ func NewPostStatus(status string) (PostStatus, error) {
 	case StatusDraft, StatusPublished, StatusPrivate, StatusDeleted:
 		return PostStatus(status), nil
 	default:
-		return PostStatus(""), myerror.NewMyError(myerror.InvalidCode, "Invalid post status")
+		return PostStatus(""), NewMyError(InvalidCode, "Invalid post status")
 	}
 }
 

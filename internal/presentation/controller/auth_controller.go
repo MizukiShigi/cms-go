@@ -54,14 +54,14 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	validate := validator.New()
-    err := validate.Struct(req)
-    if err != nil {
-        for _, err := range err.(validator.ValidationErrors) {
-            myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
-            helper.RespondWithError(w, myError)
-            return
-        }
-    }
+	err := validate.Struct(req)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+			helper.RespondWithError(w, myError)
+			return
+		}
+	}
 
 	input := &usecase.RegisterUserInput{
 		Name:     req.Name,
@@ -93,14 +93,14 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	validate := validator.New()
-    err := validate.Struct(req)
-    if err != nil {
-        for _, err := range err.(validator.ValidationErrors) {
-            myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
-            helper.RespondWithError(w, myError)
-            return
-        }
-    }
+	err := validate.Struct(req)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+			helper.RespondWithError(w, myError)
+			return
+		}
+	}
 
 	input := &usecase.LoginUserInput{
 		Email:    req.Email,

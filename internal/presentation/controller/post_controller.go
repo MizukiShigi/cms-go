@@ -9,7 +9,9 @@ import (
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/MizukiShigi/cms-go/internal/presentation/helper"
 	"github.com/MizukiShigi/cms-go/internal/usecase"
+
 	"github.com/gorilla/mux"
+	"github.com/go-playground/validator/v10"
 )
 
 type PostController struct {
@@ -31,8 +33,8 @@ type Post struct {
 }
 
 type CreatePostRequest struct {
-	Title   string   `json:"title"`
-	Content string   `json:"content"`
+	Title   string   `json:"title" validate:"required"`
+	Content string   `json:"content" validate:"required"`
 	Tags    []string `json:"tags"`
 }
 
@@ -57,6 +59,16 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 		helper.RespondWithError(w, MyError)
 		return
 	}
+
+	validate := validator.New()
+    err = validate.Struct(req)
+    if err != nil {
+        for _, err := range err.(validator.ValidationErrors) {
+            myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+            helper.RespondWithError(w, myError)
+            return
+        }
+    }
 
 	input := &usecase.CreatePostInput{
 		Title:   req.Title,
@@ -93,7 +105,11 @@ type GetPostResponse struct {
 
 func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id, exists := vars["id"]
+	if !exists {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid post ID"))
+		return
+	}
 
 	input := &usecase.GetPostInput{ID: id}
 	output, err := pc.getPostUsecase.Execute(r.Context(), input)

@@ -7,6 +7,8 @@ import (
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/MizukiShigi/cms-go/internal/presentation/helper"
 	"github.com/MizukiShigi/cms-go/internal/usecase"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthController struct {
@@ -22,14 +24,14 @@ func NewAuthController(registerUserUsecase *usecase.RegisterUserUsecase, loginUs
 }
 
 type RegisterRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string `json:"name" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 type LoginResponse struct {
@@ -46,10 +48,20 @@ type UserResponse struct {
 func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		MyError := valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload")
-		helper.RespondWithError(w, MyError)
+		myError := valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload")
+		helper.RespondWithError(w, myError)
 		return
 	}
+
+	validate := validator.New()
+    err := validate.Struct(req)
+    if err != nil {
+        for _, err := range err.(validator.ValidationErrors) {
+            myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+            helper.RespondWithError(w, myError)
+            return
+        }
+    }
 
 	input := &usecase.RegisterUserInput{
 		Name:     req.Name,
@@ -79,6 +91,16 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		helper.RespondWithError(w, MyError)
 		return
 	}
+
+	validate := validator.New()
+    err := validate.Struct(req)
+    if err != nil {
+        for _, err := range err.(validator.ValidationErrors) {
+            myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+            helper.RespondWithError(w, myError)
+            return
+        }
+    }
 
 	input := &usecase.LoginUserInput{
 		Email:    req.Email,

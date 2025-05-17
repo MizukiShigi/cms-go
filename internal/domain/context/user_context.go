@@ -9,7 +9,7 @@ import (
 func GetUserID(ctx context.Context) (string, error) {
 	userID, ok := ctx.Value(UserID).(string)
 	if !ok {
-		return "", valueobject.NewMyError(valueobject.UnauthorizedCode, "ユーザーが見つかりません")
+		return "", valueobject.NewMyError(valueobject.UnauthorizedCode, "Not found user ID")
 	}
 
 	return userID, nil

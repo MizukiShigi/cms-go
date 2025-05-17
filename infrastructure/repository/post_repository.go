@@ -32,12 +32,12 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) error {
 		CreatedAt: now,
 		UpdatedAt: now,
 		FirstPublishedAt: ToNullable(
-			*post.FirstPublishedAt,
+			post.FirstPublishedAt,
 			func(t time.Time) bool { return t.IsZero() },
 			null.TimeFrom,
 		),
 		ContentUpdatedAt: ToNullable(
-			*post.ContentUpdatedAt,
+			post.ContentUpdatedAt,
 			func(t time.Time) bool { return t.IsZero() },
 			null.TimeFrom,
 		),

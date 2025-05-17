@@ -17,7 +17,7 @@ type Post struct {
 	UpdatedAt        time.Time
 	FirstPublishedAt *time.Time
 	ContentUpdatedAt *time.Time
-	Tags             []valueobject.Tag
+	Tags             []valueobject.TagName
 }
 
 // 新規投稿作成
@@ -48,7 +48,7 @@ func ParsePost(
 	updatedAt time.Time,
 	firstPublishedAt *time.Time,
 	contentUpdatedAt *time.Time,
-	tags []valueobject.Tag,
+	tags []valueobject.TagName,
 ) *Post {
 	return &Post{
 		ID:               id,
@@ -64,7 +64,7 @@ func ParsePost(
 	}
 }
 
-func (p *Post) AddTag(tag valueobject.Tag) error {
+func (p *Post) AddTag(tag valueobject.TagName) error {
 	// タグの重複チェック
 	if slices.Contains(p.Tags, tag) {
 		return valueobject.NewMyError(valueobject.InvalidCode, "Tag already exists")

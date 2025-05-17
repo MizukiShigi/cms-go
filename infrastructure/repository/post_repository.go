@@ -43,7 +43,7 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) error {
 		),
 	}
 
-	if err := dbPost.Insert(ctx, r.db, boil.Infer()); err != nil {
+	if err := dbPost.Insert(ctx, GetExecDB(ctx, r.db), boil.Infer()); err != nil {
 		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to create post")
 	}
 
@@ -97,11 +97,11 @@ func (r *PostRepository) Get(ctx context.Context, id string) (*entity.Post, erro
 		contentUpdatedAt = nil
 	}
 
-	var voTags []valueobject.Tag
+	var voTags []valueobject.TagName
 	if dbPost.R != nil && dbPost.R.Tags != nil {
-		voTags = make([]valueobject.Tag, 0, len(dbPost.R.Tags))
+		voTags = make([]valueobject.TagName, 0, len(dbPost.R.Tags))
 		for _, tag := range dbPost.R.Tags {
-			voTags = append(voTags, valueobject.Tag(tag.Name))
+			voTags = append(voTags, valueobject.TagName(tag.Name))
 		}
 	}
 

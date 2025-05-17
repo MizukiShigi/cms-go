@@ -48,6 +48,7 @@ func main() {
 	}
 
 	// リポジトリ初期化
+	transactionManager := repository.NewTransactionManager(db)
 	userRepository := repository.NewUserRepository(db)
 	postRepository := repository.NewPostRepository(db)
 
@@ -57,7 +58,7 @@ func main() {
 	// ユースケース初期化
 	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
 	loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
-	createPostUsecase := usecase.NewCreatePostUsecase(postRepository)
+	createPostUsecase := usecase.NewCreatePostUsecase(transactionManager, postRepository)
 	getPostUsecase := usecase.NewGetPostUsecase(postRepository)
 
 	// コントローラー初期化

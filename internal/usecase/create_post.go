@@ -26,11 +26,12 @@ type CreatePostOutput struct {
 }
 
 type CreatePostUsecase struct {
-	postRepository repository.PostRepository
+	transactionManager repository.TransactionManager
+	postRepository     repository.PostRepository
 }
 
-func NewCreatePostUsecase(postRepository repository.PostRepository) *CreatePostUsecase {
-	return &CreatePostUsecase{postRepository: postRepository}
+func NewCreatePostUsecase(transactionManager repository.TransactionManager, postRepository repository.PostRepository) *CreatePostUsecase {
+	return &CreatePostUsecase{transactionManager: transactionManager, postRepository: postRepository}
 }
 
 func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput) (*CreatePostOutput, error) {
@@ -53,19 +54,28 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 	if err != nil {
 		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content")
 	}
+
 	for _, tag := range input.Tags {
-		tag, err := valueobject.NewTag(tag)
+		tag, err := valueobject.NewTagName(tag)
 		if err != nil {
 			return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid tag")
 		}
 		post.AddTag(tag)
 	}
 
-	err = u.postRepository.Create(ctx, post)
-	if err != nil {
-		errMsg := "Failed to create post"
-		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", errMsg, err))
-		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
+	transactionErr := u.transactionManager.Transaction(ctx, func(ctx context.Context) error {
+		err = u.postRepository.Create(ctx, post)
+		if err != nil {
+			errMsg := "Failed to create post"
+			slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", errMsg, err))
+			return valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
+		}
+
+		return nil
+	})
+
+	if transactionErr != nil {
+		return nil, transactionErr
 	}
 
 	tags := make([]string, 0, len(post.Tags))

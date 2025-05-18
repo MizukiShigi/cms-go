@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 
 	domaincontext "github.com/MizukiShigi/cms-go/internal/domain/context"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -21,6 +22,7 @@ func GetExecDB(ctx context.Context, db *sql.DB) boil.ContextExecutor {
 	var execDB boil.ContextExecutor
 	execDB = db
 	if contexDB, ok := ctx.Value(domaincontext.TransactionDB).(boil.ContextExecutor); ok {
+		slog.InfoContext(ctx, "TransactionDB is set")
 		execDB = contexDB
 	}
 	return execDB

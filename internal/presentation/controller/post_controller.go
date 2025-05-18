@@ -10,8 +10,8 @@ import (
 	"github.com/MizukiShigi/cms-go/internal/presentation/helper"
 	"github.com/MizukiShigi/cms-go/internal/usecase"
 
-	"github.com/gorilla/mux"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
 )
 
 type PostController struct {
@@ -46,7 +46,7 @@ type CreatePostResponse struct {
 }
 
 func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
-	userID, err := domaincontext.GetUserID(r.Context())
+	ctxUserID, err := domaincontext.GetUserID(r.Context())
 	if err != nil {
 		helper.RespondWithError(w, err)
 		return
@@ -61,19 +61,47 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	validate := validator.New()
-    err = validate.Struct(req)
-    if err != nil {
-        for _, err := range err.(validator.ValidationErrors) {
-            myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
-            helper.RespondWithError(w, myError)
-            return
-        }
-    }
+	err = validate.Struct(req)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+			helper.RespondWithError(w, myError)
+			return
+		}
+	}
+
+	title, err := valueobject.NewPostTitle(req.Title)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid title"))
+		return
+	}
+
+	content, err := valueobject.NewPostContent(req.Content)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content"))
+		return
+	}
+
+	userID, err := valueobject.ParseUserID(ctxUserID)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid user ID"))
+		return
+	}
+
+	var inputTags []valueobject.TagName
+	for _, tag := range req.Tags {
+		tag, err := valueobject.NewTagName(tag)
+		if err != nil {
+			helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid tag"))
+			return
+		}
+		inputTags = append(inputTags, tag)
+	}
 
 	input := &usecase.CreatePostInput{
-		Title:   req.Title,
-		Content: req.Content,
-		Tags:    req.Tags,
+		Title:   title,
+		Content: content,
+		Tags:    inputTags,
 		UserID:  userID,
 	}
 
@@ -83,11 +111,16 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	oiutputTags := []string{}
+	for _, tag := range output.Tags {
+		oiutputTags = append(oiutputTags, tag.String())
+	}
+
 	createPostResponse := CreatePostResponse{
-		ID:      output.ID,
-		Title:   output.Title,
-		Content: output.Content,
-		Tags:    output.Tags,
+		ID:      output.ID.String(),
+		Title:   output.Title.String(),
+		Content: output.Content.String(),
+		Tags:    oiutputTags,
 	}
 
 	helper.RespondWithJSON(w, http.StatusCreated, createPostResponse)
@@ -107,11 +140,17 @@ func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, exists := vars["id"]
 	if !exists {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Required post ID"))
+		return
+	}
+
+	postID, err := valueobject.ParsePostID(id)
+	if err != nil {
 		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid post ID"))
 		return
 	}
 
-	input := &usecase.GetPostInput{ID: id}
+	input := &usecase.GetPostInput{ID: postID}
 	output, err := pc.getPostUsecase.Execute(r.Context(), input)
 	if err != nil {
 		helper.RespondWithError(w, err)
@@ -121,14 +160,17 @@ func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
 	// 配列で返したいので、nilの場合は空配列を返す
 	tags := []string{}
 	if output.Tags != nil {
-		tags = output.Tags
+		tags = make([]string, 0, len(output.Tags))
+		for _, tag := range output.Tags {
+			tags = append(tags, tag.String())
+		}
 	}
 
 	res := GetPostResponse{
-		ID:               output.ID,
-		Title:            output.Title,
-		Content:          output.Content,
-		Status:           output.Status,
+		ID:               output.ID.String(),
+		Title:            output.Title.String(),
+		Content:          output.Content.String(),
+		Status:           output.Status.String(),
 		Tags:             tags,
 		FirstPublishedAt: output.FirstPublishedAt,
 		ContentUpdatedAt: output.ContentUpdatedAt,

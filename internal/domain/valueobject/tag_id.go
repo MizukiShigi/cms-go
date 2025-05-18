@@ -12,3 +12,11 @@ func NewTagID() TagID {
 func (t TagID) String() string {
 	return string(t)
 }
+
+func ParseTagID(id string) (TagID, error) {
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return "", err
+	}
+	return TagID(uuid.String()), nil
+}

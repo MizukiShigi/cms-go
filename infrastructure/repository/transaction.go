@@ -19,8 +19,8 @@ func NewTransactionManager(db *sql.DB) *TransactionManager {
 	}
 }
 
-func (r *PostRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	tx, err := r.db.BeginTx(ctx, nil)
+func (tm *TransactionManager) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
+	tx, err := tm.db.BeginTx(ctx, nil)
 	if err != nil {
 		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to begin transaction")
 	}
@@ -36,16 +36,17 @@ func (r *PostRepository) Transaction(ctx context.Context, fn func(ctx context.Co
 	}()
 
 	ctxWithTx := context.WithValue(ctx, domaincontext.TransactionDB, tx)
-
+	slog.InfoContext(ctx, "Transaction is set to context")
 	if err := fn(ctxWithTx); err != nil {
-		err := tx.Rollback()
-		if err != nil {
-			slog.ErrorContext(ctx, "Failed to rollback transaction", "error", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			slog.ErrorContext(ctx, "Failed to rollback transaction", "error", rollbackErr)
 		}
 		return err
 	}
 
 	if err := tx.Commit(); err != nil {
+		slog.ErrorContext(ctx, "Failed to commit transaction", "error", err)
 		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to commit transaction")
 	}
 

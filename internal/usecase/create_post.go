@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
@@ -11,55 +10,41 @@ import (
 )
 
 type CreatePostInput struct {
-	Title   string
-	Content string
-	Tags    []string
-	UserID  string
+	Title   valueobject.PostTitle
+	Content valueobject.PostContent
+	Tags    []valueobject.TagName
+	UserID  valueobject.UserID
 }
 
 type CreatePostOutput struct {
-	ID      string
-	Title   string
-	Content string
-	Tags    []string
-	UserID  string
+	ID      valueobject.PostID
+	Title   valueobject.PostTitle
+	Content valueobject.PostContent
+	Tags    []valueobject.TagName
+	UserID  valueobject.UserID
 }
 
 type CreatePostUsecase struct {
 	transactionManager repository.TransactionManager
 	postRepository     repository.PostRepository
+	tagRepository      repository.TagRepository
 }
 
-func NewCreatePostUsecase(transactionManager repository.TransactionManager, postRepository repository.PostRepository) *CreatePostUsecase {
-	return &CreatePostUsecase{transactionManager: transactionManager, postRepository: postRepository}
+func NewCreatePostUsecase(transactionManager repository.TransactionManager, postRepository repository.PostRepository, tagRepository repository.TagRepository) *CreatePostUsecase {
+	return &CreatePostUsecase{
+		transactionManager: transactionManager,
+		postRepository:     postRepository,
+		tagRepository:      tagRepository,
+	}
 }
 
 func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput) (*CreatePostOutput, error) {
-	title, err := valueobject.NewPostTitle(input.Title)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid title")
-	}
-
-	content, err := valueobject.NewPostContent(input.Content)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content")
-	}
-
-	userID, err := valueobject.ParseUserID(input.UserID)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid user ID")
-	}
-
-	post, err := entity.NewPost(title, content, userID)
+	post, err := entity.NewPost(input.Title, input.Content, input.UserID)
 	if err != nil {
 		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content")
 	}
 
 	for _, tag := range input.Tags {
-		tag, err := valueobject.NewTagName(tag)
-		if err != nil {
-			return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid tag")
-		}
 		post.AddTag(tag)
 	}
 
@@ -67,8 +52,28 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 		err = u.postRepository.Create(ctx, post)
 		if err != nil {
 			errMsg := "Failed to create post"
-			slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", errMsg, err))
+			slog.ErrorContext(ctx, "error", err)
 			return valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
+		}
+
+		if post.Tags != nil {
+			tags := make([]*entity.Tag, 0, len(post.Tags))
+			for _, tagName := range post.Tags {
+				retTag, err := u.tagRepository.FindOrCreateByName(ctx, entity.NewTagWithName(tagName))
+				if err != nil {
+					errMsg := "Failed to create tag"
+					slog.ErrorContext(ctx, "error", err)
+					return valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
+				}
+				tags = append(tags, retTag)
+			}
+
+			err = u.postRepository.SetTags(ctx, post, tags)
+			if err != nil {
+				errMsg := "Failed to set tags"
+				slog.ErrorContext(ctx, "error", err)
+				return valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
+			}
 		}
 
 		return nil
@@ -78,16 +83,11 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 		return nil, transactionErr
 	}
 
-	tags := make([]string, 0, len(post.Tags))
-	for _, tag := range post.Tags {
-		tags = append(tags, tag.String())
-	}
-
 	return &CreatePostOutput{
-		ID:      post.ID.String(),
-		Title:   post.Title.String(),
-		Content: post.Content.String(),
-		Tags:    tags,
-		UserID:  post.UserID.String(),
+		ID:      post.ID,
+		Title:   post.Title,
+		Content: post.Content,
+		Tags:    post.Tags,
+		UserID:  post.UserID,
 	}, nil
 }

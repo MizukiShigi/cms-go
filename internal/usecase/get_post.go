@@ -5,18 +5,19 @@ import (
 	"time"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
+	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 )
 
 type GetPostInput struct {
-	ID string
+	ID valueobject.PostID
 }
 
 type GetPostOutput struct {
-	ID               string
-	Title            string
-	Content          string
-	Tags             []string
-	Status           string
+	ID               valueobject.PostID
+	Title            valueobject.PostTitle
+	Content          valueobject.PostContent
+	Tags             []valueobject.TagName
+	Status           valueobject.PostStatus
 	FirstPublishedAt *time.Time
 	ContentUpdatedAt *time.Time
 }
@@ -35,17 +36,12 @@ func (u *GetPostUsecase) Execute(ctx context.Context, input *GetPostInput) (*Get
 		return nil, err
 	}
 
-	tags := make([]string, 0, len(post.Tags))
-	for _, tag := range post.Tags {
-		tags = append(tags, tag.String())
-	}
-
 	return &GetPostOutput{
-		ID:      post.ID.String(),
-		Title:            post.Title.String(),
-		Content:          post.Content.String(),
-		Status:           post.Status.String(),
-		Tags:             tags,
+		ID:               post.ID,
+		Title:            post.Title,
+		Content:          post.Content,
+		Status:           post.Status,
+		Tags:             post.Tags,
 		FirstPublishedAt: post.FirstPublishedAt,
 		ContentUpdatedAt: post.ContentUpdatedAt,
 	}, nil

@@ -50,8 +50,8 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) error {
 	return nil
 }
 
-func (r *PostRepository) Get(ctx context.Context, id string) (*entity.Post, error) {
-	dbPost, err := models.FindPost(ctx, r.db, id)
+func (r *PostRepository) Get(ctx context.Context, id valueobject.PostID) (*entity.Post, error) {
+	dbPost, err := models.FindPost(ctx, r.db, id.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, valueobject.NewMyError(valueobject.NotFoundCode, "Post not found")
@@ -119,4 +119,28 @@ func (r *PostRepository) Get(ctx context.Context, id string) (*entity.Post, erro
 	}
 
 	return post, nil
+}
+
+func (r *PostRepository) SetTags(ctx context.Context, post *entity.Post, tags []*entity.Tag) error {
+	if tags == nil {
+		slog.InfoContext(ctx, "No tags to set")
+		return nil
+	}
+
+	dbPost := &models.Post{
+		ID: post.ID.String(),
+	}
+
+	dbTags := make([]*models.Tag, 0, len(tags))
+	for _, tag := range tags {
+		dbTags = append(dbTags, &models.Tag{
+			ID: tag.ID.String(),
+		})
+	}
+
+	if err := dbPost.SetTags(ctx, GetExecDB(ctx, r.db), false, dbTags...); err != nil {
+		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to set tags")
+	}
+
+	return nil
 }

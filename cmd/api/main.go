@@ -51,6 +51,7 @@ func main() {
 	transactionManager := repository.NewTransactionManager(db)
 	userRepository := repository.NewUserRepository(db)
 	postRepository := repository.NewPostRepository(db)
+	tagRepository := repository.NewTagRepository(db)
 
 	// サービス初期化
 	authService := auth.NewJWTService(os.Getenv("JWT_SECRET_KEY"))
@@ -58,7 +59,7 @@ func main() {
 	// ユースケース初期化
 	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
 	loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
-	createPostUsecase := usecase.NewCreatePostUsecase(transactionManager, postRepository)
+	createPostUsecase := usecase.NewCreatePostUsecase(transactionManager, postRepository, tagRepository)
 	getPostUsecase := usecase.NewGetPostUsecase(postRepository)
 
 	// コントローラー初期化

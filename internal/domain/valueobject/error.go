@@ -63,3 +63,11 @@ func IsMyError(err error) bool {
 	var domainErr *MyError
 	return errors.As(err, &domainErr)
 }
+
+func ReturnMyError(err error, myerr *MyError) *MyError {
+	var retErr *MyError
+	if errors.As(err, &retErr) {
+		return retErr
+	}
+	return myerr
+}

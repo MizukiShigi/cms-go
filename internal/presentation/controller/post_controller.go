@@ -17,12 +17,14 @@ import (
 type PostController struct {
 	createPostUsecase *usecase.CreatePostUsecase
 	getPostUsecase    *usecase.GetPostUsecase
+	updatePostUsecase *usecase.UpdatePostUsecase
 }
 
-func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase) *PostController {
+func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase, updatePostUsecase *usecase.UpdatePostUsecase) *PostController {
 	return &PostController{
 		createPostUsecase: createPostUsecase,
 		getPostUsecase:    getPostUsecase,
+		updatePostUsecase: updatePostUsecase,
 	}
 }
 
@@ -36,6 +38,7 @@ type CreatePostRequest struct {
 	Title   string   `json:"title" validate:"required"`
 	Content string   `json:"content" validate:"required"`
 	Tags    []string `json:"tags"`
+	Status  string   `json:"status" validate:"required,oneof=draft published"`
 }
 
 type CreatePostResponse struct {
@@ -98,11 +101,18 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 		inputTags = append(inputTags, tag)
 	}
 
+	status, err := valueobject.NewPostStatus(req.Status)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid status"))
+		return
+	}
+
 	input := &usecase.CreatePostInput{
 		Title:   title,
 		Content: content,
 		Tags:    inputTags,
 		UserID:  userID,
+		Status:  status,
 	}
 
 	output, err := pc.createPostUsecase.Execute(r.Context(), input)
@@ -173,6 +183,98 @@ func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
 		Status:           output.Status.String(),
 		Tags:             tags,
 		FirstPublishedAt: output.FirstPublishedAt,
+		ContentUpdatedAt: output.ContentUpdatedAt,
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, res)
+}
+
+type UpdatePostRequest struct {
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    []string `json:"tags"`
+}
+
+type UpdatePostResponse struct {
+	ID               string     `json:"id"`
+	Title            string     `json:"title"`
+	Content          string     `json:"content"`
+	Status           string     `json:"status"`
+	Tags             []string   `json:"tags"`
+	FirstPublishedAt *time.Time `json:"first_published_at"`
+	ContentUpdatedAt *time.Time `json:"content_updated_at"`
+}
+
+func (pc *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, exists := vars["id"]
+	if !exists {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Required post ID"))
+		return
+	}
+
+	var req UpdatePostRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload"))
+		return
+	}
+
+	postID, err := valueobject.ParsePostID(id)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid post ID"))
+		return
+	}
+
+	content, err := valueobject.NewPostContent(req.Content)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content"))
+		return
+	}
+
+	title, err := valueobject.NewPostTitle(req.Title)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid title"))
+		return
+	}
+
+	var inputTags []valueobject.TagName
+	for _, tag := range req.Tags {
+		tag, err := valueobject.NewTagName(tag)
+		if err != nil {
+			helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid tag"))
+			return
+		}
+		inputTags = append(inputTags, tag)
+	}
+
+	input := &usecase.UpdatePostInput{
+		ID:      postID,
+		Title:   title,
+		Content: content,
+		Tags:    inputTags,
+	}
+
+	output, err := pc.updatePostUsecase.Execute(r.Context(), input)
+	if err != nil {
+		helper.RespondWithError(w, err)
+		return
+	}
+
+	tags := []string{}
+	if output.Tags != nil {
+		tags = make([]string, 0, len(output.Tags))
+		for _, tag := range output.Tags {
+			tags = append(tags, tag.String())
+		}
+	}
+
+	res := UpdatePostResponse{
+		ID:               output.ID.String(),
+		Title:            output.Title.String(),
+		Content:          output.Content.String(),
+		Status:           output.Status.String(),
+		Tags:             tags,
 		ContentUpdatedAt: output.ContentUpdatedAt,
 	}
 

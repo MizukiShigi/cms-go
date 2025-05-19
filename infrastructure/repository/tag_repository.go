@@ -22,6 +22,29 @@ func NewTagRepository(db *sql.DB) *TagRepository {
 	return &TagRepository{db: db}
 }
 
+func (tr *TagRepository) FindByPostID(ctx context.Context, postID valueobject.PostID) ([]*entity.Tag, error) {
+	dbTags, err := models.Tags(
+		qm.Where("post_id = ?", postID.String()),
+	).All(ctx, tr.db)
+	if err != nil {
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to find tags")
+	}
+
+	voTags := make([]*entity.Tag, 0, len(dbTags))
+	for _, dbTag := range dbTags {
+		tagID, err := valueobject.ParseTagID(dbTag.ID)
+		if err != nil {
+			return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to parse tag ID")
+		}
+		tagName, err := valueobject.NewTagName(dbTag.Name)
+		if err != nil {
+			return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to parse tag name")
+		}
+		voTags = append(voTags, entity.ParseTag(tagID, tagName, dbTag.CreatedAt, dbTag.UpdatedAt))
+	}
+	return voTags, nil
+}
+
 func (tr *TagRepository) FindOrCreateByName(ctx context.Context, tag *entity.Tag) (*entity.Tag, error) {
 	isInsert := false
 	execDB := GetExecDB(ctx, tr.db)

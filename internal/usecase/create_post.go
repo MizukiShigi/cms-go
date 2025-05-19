@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
@@ -14,6 +13,7 @@ type CreatePostInput struct {
 	Content valueobject.PostContent
 	Tags    []valueobject.TagName
 	UserID  valueobject.UserID
+	Status  valueobject.PostStatus
 }
 
 type CreatePostOutput struct {
@@ -39,7 +39,7 @@ func NewCreatePostUsecase(transactionManager repository.TransactionManager, post
 }
 
 func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput) (*CreatePostOutput, error) {
-	post, err := entity.NewPost(input.Title, input.Content, input.UserID)
+	post, err := entity.NewPost(input.Title, input.Content, input.UserID, input.Status)
 	if err != nil {
 		return nil, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content")
 	}
@@ -51,29 +51,21 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 	transactionErr := u.transactionManager.Transaction(ctx, func(ctx context.Context) error {
 		err = u.postRepository.Create(ctx, post)
 		if err != nil {
-			errMsg := "Failed to create post"
-			slog.ErrorContext(ctx, "error", err)
-			return valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
+			return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to create post")
 		}
 
-		if post.Tags != nil {
-			tags := make([]*entity.Tag, 0, len(post.Tags))
-			for _, tagName := range post.Tags {
-				retTag, err := u.tagRepository.FindOrCreateByName(ctx, entity.NewTagWithName(tagName))
-				if err != nil {
-					errMsg := "Failed to create tag"
-					slog.ErrorContext(ctx, "error", err)
-					return valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
-				}
-				tags = append(tags, retTag)
-			}
-
-			err = u.postRepository.SetTags(ctx, post, tags)
+		tags := make([]*entity.Tag, 0, len(post.Tags))
+		for _, tagName := range post.Tags {
+			retTag, err := u.tagRepository.FindOrCreateByName(ctx, entity.NewTagWithName(tagName))
 			if err != nil {
-				errMsg := "Failed to set tags"
-				slog.ErrorContext(ctx, "error", err)
-				return valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
+				return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to create tag")
 			}
+			tags = append(tags, retTag)
+		}
+
+		err = u.postRepository.SetTags(ctx, post, tags)
+		if err != nil {
+			return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to set tags")
 		}
 
 		return nil

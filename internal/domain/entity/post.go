@@ -21,14 +21,20 @@ type Post struct {
 }
 
 // 新規投稿作成
-func NewPost(title valueobject.PostTitle, content valueobject.PostContent, userID valueobject.UserID) (*Post, error) {
+func NewPost(title valueobject.PostTitle, content valueobject.PostContent, userID valueobject.UserID, status valueobject.PostStatus) (*Post, error) {
 	now := time.Now()
+	var firstPublishedAt time.Time
+	if status == valueobject.StatusPublished {
+		firstPublishedAt = now
+	}
+
 	post := &Post{
 		ID:               valueobject.NewPostID(),
 		Title:            title,
 		Content:          content,
 		UserID:           userID,
-		Status:           valueobject.StatusDraft,
+		Status:           status,
+		FirstPublishedAt: &firstPublishedAt,
 		ContentUpdatedAt: &now,
 		CreatedAt:        now,
 		UpdatedAt:        now,

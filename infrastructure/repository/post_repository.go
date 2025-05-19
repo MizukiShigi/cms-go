@@ -105,20 +105,40 @@ func (r *PostRepository) Get(ctx context.Context, id valueobject.PostID) (*entit
 		}
 	}
 
-	post := &entity.Post{
-		ID:               voPostID,
-		UserID:           voUserID,
-		Title:            voTitle,
-		Content:          voContent,
-		Status:           voStatus,
-		CreatedAt:        dbPost.CreatedAt,
-		UpdatedAt:        dbPost.UpdatedAt,
-		FirstPublishedAt: firstPublishedAt,
-		ContentUpdatedAt: contentUpdatedAt,
-		Tags:             voTags,
-	}
+	post := entity.ParsePost(
+		voPostID,
+		voTitle,
+		voContent,
+		voUserID,
+		voStatus,
+		dbPost.CreatedAt,
+		dbPost.UpdatedAt,
+		firstPublishedAt,
+		contentUpdatedAt,
+		voTags,
+	)
 
 	return post, nil
+}
+
+func (r *PostRepository) Update(ctx context.Context, post *entity.Post) error {
+	dbPost := &models.Post{
+		ID: post.ID.String(),
+		Title: post.Title.String(),
+		Content: post.Content.String(),
+		ContentUpdatedAt: ToNullable(
+			post.ContentUpdatedAt,
+			func(t time.Time) bool { return t.IsZero() },
+			null.TimeFrom,
+		),
+	}
+
+	updateColumns := boil.Whitelist(models.PostColumns.Title, models.PostColumns.Content, models.PostColumns.ContentUpdatedAt)
+	if _, err := dbPost.Update(ctx, GetExecDB(ctx, r.db), updateColumns); err != nil {
+		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to update post")
+	}
+
+	return nil
 }
 
 func (r *PostRepository) SetTags(ctx context.Context, post *entity.Post, tags []*entity.Tag) error {

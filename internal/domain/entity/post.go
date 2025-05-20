@@ -91,38 +91,70 @@ func (p *Post) AddTag(tag valueobject.TagName) error {
 * 公開->（非公開）
 * 非公開->（公開、削除）
  */
-func (p *Post) Publish() error {
+func (p *Post) SetStatus(status valueobject.PostStatus) error {
+	if p.Status == status {
+		return nil
+	}	
+
+	switch status {
+	case valueobject.StatusDraft:
+		return p.draft()
+	case valueobject.StatusPublished:
+		return p.publish()
+	case valueobject.StatusPrivate:
+		return p.private()
+	case valueobject.StatusDeleted:
+		return p.delete()
+	default:
+		return valueobject.NewMyError(valueobject.InvalidCode, "Invalid post status")
+	}
+}
+
+func (p *Post) draft() error {
+	if p.Status != valueobject.StatusDraft {
+		return valueobject.NewMyError(valueobject.InvalidCode, "Only draft posts can be drafted")
+	}
+
+	p.Status = valueobject.StatusDraft
+	*p.ContentUpdatedAt = time.Now()
+	return nil
+}
+
+func (p *Post) publish() error {
 	if p.Status != valueobject.StatusDraft && p.Status != valueobject.StatusPrivate {
 		return valueobject.NewMyError(valueobject.InvalidCode, "Only draft and private posts can be published")
 	}
 
 	p.Status = valueobject.StatusPublished
 
-	if p.FirstPublishedAt.IsZero() {
-		*p.FirstPublishedAt = time.Now()
+	now := time.Now()
+	if p.FirstPublishedAt == nil {
+		p.FirstPublishedAt = &now
 	}
 
 	p.Status = valueobject.StatusPublished
-	*p.ContentUpdatedAt = time.Now()
+	p.ContentUpdatedAt = &now
 	return nil
 }
 
-func (p *Post) Private() error {
+func (p *Post) private() error {
 	if p.Status != valueobject.StatusPublished {
 		return valueobject.NewMyError(valueobject.InvalidCode, "Only published posts can be private")
 	}
 
 	p.Status = valueobject.StatusPrivate
-	*p.ContentUpdatedAt = time.Now()
+	now := time.Now()
+	p.ContentUpdatedAt = &now
 	return nil
 }
 
-func (p *Post) Delete() error {
+func (p *Post) delete() error {
 	if p.Status != valueobject.StatusDraft && p.Status != valueobject.StatusPrivate {
 		return valueobject.NewMyError(valueobject.InvalidCode, "Only draft and private posts can be deleted")
 	}
 
 	p.Status = valueobject.StatusDeleted
-	*p.ContentUpdatedAt = time.Now()
+	now := time.Now()
+	p.ContentUpdatedAt = &now
 	return nil
 }

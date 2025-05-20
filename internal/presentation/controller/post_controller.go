@@ -18,13 +18,15 @@ type PostController struct {
 	createPostUsecase *usecase.CreatePostUsecase
 	getPostUsecase    *usecase.GetPostUsecase
 	updatePostUsecase *usecase.UpdatePostUsecase
+	patchPostUsecase  *usecase.PatchPostUsecase
 }
 
-func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase, updatePostUsecase *usecase.UpdatePostUsecase) *PostController {
+func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase, updatePostUsecase *usecase.UpdatePostUsecase, patchPostUsecase *usecase.PatchPostUsecase) *PostController {
 	return &PostController{
 		createPostUsecase: createPostUsecase,
 		getPostUsecase:    getPostUsecase,
 		updatePostUsecase: updatePostUsecase,
+		patchPostUsecase:  patchPostUsecase,
 	}
 }
 
@@ -190,8 +192,8 @@ func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdatePostRequest struct {
-	Title   string   `json:"title" validate:"required"`
-	Content string   `json:"content" validate:"required"`
+	Title   string   `json:"title" validate:"required,min=1"`
+	Content string   `json:"content" validate:"required,min=1"`
 	Tags    []string `json:"tags"`
 }
 
@@ -285,6 +287,139 @@ func (pc *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		Content:          output.Content.String(),
 		Status:           output.Status.String(),
 		Tags:             tags,
+		FirstPublishedAt: output.FirstPublishedAt,
+		ContentUpdatedAt: output.ContentUpdatedAt,
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, res)
+}
+
+type PatchPostRequest struct {
+	Title   string   `json:"title" validate:"omitempty,min=1"`
+	Content string   `json:"content" validate:"omitempty,min=1"`
+	Tags    []string `json:"tags"`
+	Status  string   `json:"status" validate:"omitempty,oneof=draft published private deleted"`	
+}
+
+type PatchPostResponse struct {
+	ID               string     `json:"id"`
+	Title            string     `json:"title"`
+	Content          string     `json:"content"`
+	Status           string     `json:"status"`
+	Tags             []string   `json:"tags"`
+	FirstPublishedAt *time.Time `json:"first_published_at"`
+	ContentUpdatedAt *time.Time `json:"content_updated_at"`
+}
+
+func (pc *PostController) PatchPost(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, exists := vars["id"]
+	if !exists {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Required post ID"))
+		return
+	}
+	
+	postID, err := valueobject.ParsePostID(id)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid post ID"))
+		return
+	}
+
+	var req PatchPostRequest
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload"))
+		return
+	}
+	
+	validate := validator.New()
+	err = validate.Struct(req)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+			helper.RespondWithError(w, myError)
+			return
+		}
+	}
+
+	if req.Title == "" && req.Content == "" && req.Status == "" && len(req.Tags) == 0 {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "No update fields"))
+		return
+	}
+
+	var title *valueobject.PostTitle
+	if req.Title != "" {
+		t, err := valueobject.NewPostTitle(req.Title)
+		if err != nil {
+			helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid title"))
+			return
+		}
+		title = &t
+	}
+
+	var content *valueobject.PostContent
+	if req.Content != "" {
+		c, err := valueobject.NewPostContent(req.Content)
+		if err != nil {
+			helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid content"))
+			return
+		}
+		content = &c
+	}
+
+	var status *valueobject.PostStatus
+	if req.Status != "" {
+		s, err := valueobject.NewPostStatus(req.Status)
+		if err != nil {
+			helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid status"))
+			return
+		}
+		status = &s
+	}
+
+	var inputTags []valueobject.TagName
+	if len(req.Tags) > 0 {
+		tags := make([]valueobject.TagName, 0, len(req.Tags))
+		for _, tag := range req.Tags {
+			t, err := valueobject.NewTagName(tag)
+			if err != nil {
+				helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid tag"))
+				return
+			}
+			tags = append(tags, t)
+		}
+		inputTags = tags
+	}
+
+	input := &usecase.PatchPostInput{
+		ID:      postID,
+		Title:   title,
+		Content: content,
+		Status:  status,
+		Tags:    inputTags,
+	}
+
+	output, err := pc.patchPostUsecase.Execute(r.Context(), input)
+	if err != nil {
+		helper.RespondWithError(w, err)
+		return
+	}
+
+	outputTags := []string{}
+	if output.Tags != nil {
+		outputTags = make([]string, 0, len(output.Tags))
+		for _, tag := range output.Tags {
+			outputTags = append(outputTags, tag.String())
+		}
+	}
+
+	res := PatchPostResponse{
+		ID:               output.ID.String(),
+		Title:            output.Title.String(),
+		Content:          output.Content.String(),
+		Status:           output.Status.String(),
+		Tags:             outputTags,
+		FirstPublishedAt: output.FirstPublishedAt,
 		ContentUpdatedAt: output.ContentUpdatedAt,
 	}
 

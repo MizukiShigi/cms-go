@@ -62,10 +62,11 @@ func main() {
 	createPostUsecase := usecase.NewCreatePostUsecase(transactionManager, postRepository, tagRepository)
 	getPostUsecase := usecase.NewGetPostUsecase(postRepository)
 	updatePostUsecase := usecase.NewUpdatePostUsecase(transactionManager, postRepository, tagRepository)
+	patchPostUsecase := usecase.NewPatchPostUsecase(postRepository)
 
 	// コントローラー初期化
 	authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
-	postController := controller.NewPostController(createPostUsecase, getPostUsecase, updatePostUsecase)
+	postController := controller.NewPostController(createPostUsecase, getPostUsecase, updatePostUsecase, patchPostUsecase)
 
 	// ルーティング設定
 	r := mux.NewRouter()
@@ -93,6 +94,7 @@ func main() {
 	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
 	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
 	postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
+	postRouter.HandleFunc("/{id}", postController.PatchPost).Methods("PATCH")
 
 	srv := &http.Server{
 		Addr:         os.Getenv("PORT"),

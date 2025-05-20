@@ -190,8 +190,8 @@ func (pc *PostController) GetPost(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdatePostRequest struct {
-	Title   string   `json:"title"`
-	Content string   `json:"content"`
+	Title   string   `json:"title" validate:"required"`
+	Content string   `json:"content" validate:"required"`
 	Tags    []string `json:"tags"`
 }
 
@@ -218,6 +218,16 @@ func (pc *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload"))
 		return
+	}
+
+	validate := validator.New()
+	err = validate.Struct(req)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
+			helper.RespondWithError(w, myError)
+			return
+		}
 	}
 
 	postID, err := valueobject.ParsePostID(id)

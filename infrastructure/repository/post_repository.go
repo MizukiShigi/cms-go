@@ -123,18 +123,25 @@ func (r *PostRepository) Get(ctx context.Context, id valueobject.PostID) (*entit
 
 func (r *PostRepository) Update(ctx context.Context, post *entity.Post) error {
 	dbPost := &models.Post{
-		ID: post.ID.String(),
-		Title: post.Title.String(),
+		ID:      post.ID.String(),
+		Title:   post.Title.String(),
 		Content: post.Content.String(),
+		UserID:  post.UserID.String(),
+		Status:  post.Status.String(),
 		ContentUpdatedAt: ToNullable(
 			post.ContentUpdatedAt,
 			func(t time.Time) bool { return t.IsZero() },
 			null.TimeFrom,
 		),
+		FirstPublishedAt: ToNullable(
+			post.FirstPublishedAt,
+			func(t time.Time) bool { return t.IsZero() },
+			null.TimeFrom,
+		),
 	}
 
-	updateColumns := boil.Whitelist(models.PostColumns.Title, models.PostColumns.Content, models.PostColumns.ContentUpdatedAt)
-	if _, err := dbPost.Update(ctx, GetExecDB(ctx, r.db), updateColumns); err != nil {
+	if _, err := dbPost.Update(ctx, GetExecDB(ctx, r.db), boil.Infer()); err != nil {
+		slog.ErrorContext(ctx, "Failed to update post", "error", err)
 		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to update post")
 	}
 

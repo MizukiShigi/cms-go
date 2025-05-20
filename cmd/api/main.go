@@ -93,6 +93,7 @@ func main() {
 	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
 	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
 	postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
+
 	srv := &http.Server{
 		Addr:         os.Getenv("PORT"),
 		Handler:      r,

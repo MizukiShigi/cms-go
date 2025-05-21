@@ -1,2 +1,0 @@
-migration:
-	sqlboiler psql

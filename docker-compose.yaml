@@ -3,14 +3,14 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./src/Dockerfile
       target: dev
     ports:
       - "8080:8080"
     depends_on:
       - db
     volumes:
-      - .:/app
+      - ./src:/app
 
   db:
     image: postgres:15
@@ -22,7 +22,7 @@ services:
       - POSTGRES_DB=cms
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d
+      - ./src/migrations:/docker-entrypoint-initdb.d
 
 volumes:
   postgres-data:

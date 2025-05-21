@@ -1,0 +1,16 @@
+# sqlboiler.toml
+output = "infrastructure/db/sqlboiler/models"
+pkgname = "models"
+no-tests = false
+add-global-variants = true
+wipe = true
+no-hooks = false
+
+[psql]
+  dbname = "cms"
+  host = "localhost"
+  port = 5432
+  user = "postgres"
+  pass = "password"
+  schema = "public"
+  sslmode = "disable"

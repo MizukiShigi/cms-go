@@ -26,4 +26,4 @@
 
 # Terraform
 terraform.tfvars
-.infra/terraform-cloudrun-api/.terraform/
+.infra/terraform-cloudrun-api/.terraform/*

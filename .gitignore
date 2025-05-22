@@ -25,5 +25,3 @@
 .DS_Store?
 
 # Terraform
-terraform.tfvars
-infra/terraform-cloudrun-api/.terraform/*

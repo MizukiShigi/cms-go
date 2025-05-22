@@ -23,3 +23,7 @@
 # OS固有のファイル
 .DS_Store
 .DS_Store?
+
+# Terraform
+terraform.tfvars
+.terraform/

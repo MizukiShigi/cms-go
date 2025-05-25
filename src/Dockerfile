@@ -21,7 +21,7 @@ COPY --from=builder /app .
 CMD ["air", "-c", ".air.toml"]
 
 # 本番用イメージ
-FROM alpine:latest AS prod
+FROM alpine:latest AS prd
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 # ビルドイメージからバイナリをコピー

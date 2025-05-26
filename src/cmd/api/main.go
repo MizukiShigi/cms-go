@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -36,7 +38,17 @@ func main() {
 	slog.SetDefault(slog.New(customHandler))
 
 	// DBセットアップ
-	db, err := sql.Open("postgres", os.Getenv("DB_URL"))
+	host := os.Getenv("DB_HOST")
+	name := os.Getenv("DB_NAME")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	if host == "" || name == "" || user == "" || password == "" {
+		log.Fatal("Database connection environment variables not set")
+	}
+
+	encodedPassword := url.QueryEscape(password)
+
+	db, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable", user, encodedPassword, host, name))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,7 +109,7 @@ func main() {
 	postRouter.HandleFunc("/{id}", postController.PatchPost).Methods("PATCH")
 
 	srv := &http.Server{
-		Addr:         os.Getenv("PORT"),
+		Addr:         ":" + os.Getenv("PORT"),
 		Handler:      r,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -135,7 +147,8 @@ func loadDevelopEnv() {
 	if env == "" || env == "development" {
 		// 開発環境のみ .env ファイルを読み込む
 		if err := godotenv.Load(".env.development"); err != nil {
-			log.Fatalf(".env.development ファイルが見つかりません")
+			log.Printf(".env.development ファイルが見つかりません（本番環境では正常）: %v", err)
+			// log.Fatalf → log.Printf に変更してアプリを継続
 		}
 	}
 }

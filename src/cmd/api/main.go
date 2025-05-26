@@ -54,6 +54,12 @@ func main() {
 	}
 	defer db.Close()
 
+	// データベース接続プール設定
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
+	db.SetConnMaxIdleTime(1 * time.Minute)
+
 	// DB接続の検証
 	if err := db.Ping(); err != nil {
 		log.Fatalf("データベース接続エラー: %v", err)
@@ -85,6 +91,7 @@ func main() {
 
 	// 全てのリクエストにミドルウェア設定
 	r.Use(middleware.LoggingMiddleware)
+	r.Use(middleware.TimeoutMiddleware)
 
 	// バージョニング
 	v1Router := r.PathPrefix("/cms/v1").Subrouter()

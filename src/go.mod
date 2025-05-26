@@ -3,6 +3,7 @@ module github.com/MizukiShigi/cms-go
 go 1.24.0
 
 require (
+	github.com/Kount/pq-timeouts v1.0.0
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible

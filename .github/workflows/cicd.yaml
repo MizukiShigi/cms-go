@@ -68,7 +68,6 @@ jobs:
       - name: Run tests with coverage
         working-directory: ./src
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/cms_test?sslmode=disable
           DB_HOST: localhost
           DB_NAME: cms_test
           DB_USER: postgres

@@ -37,14 +37,25 @@ func main() {
 	customHandler := logger.NewHandler(baseHadler)
 	slog.SetDefault(slog.New(customHandler))
 
-	// DBセットアップ
-	host := os.Getenv("DB_HOST")
-	name := os.Getenv("DB_NAME")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	if host == "" || name == "" || user == "" || password == "" {
-		log.Fatal("Database connection environment variables not set")
+	// 環境変数の検証とデフォルト値設定
+	host := getEnvOrDefault("DB_HOST", "localhost")
+	name := getEnvOrDefault("DB_NAME", "cms_dev")
+	user := getEnvOrDefault("DB_USER", "postgres")
+	password := getEnvOrDefault("DB_PASSWORD", "postgres")
+	jwtSecret := os.Getenv("JWT_SECRET_KEY")
+	port := getEnvOrDefault("PORT", "8080")
+
+	// 必須環境変数の検証
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET_KEY environment variable is required")
 	}
+
+	slog.Info("Starting application",
+		"db_host", host,
+		"db_name", name,
+		"db_user", user,
+		"port", port,
+		"env", os.Getenv("GO_ENV"))
 
 	encodedPassword := url.QueryEscape(password)
 
@@ -72,7 +83,7 @@ func main() {
 	tagRepository := repository.NewTagRepository(db)
 
 	// サービス初期化
-	authService := auth.NewJWTService(os.Getenv("JWT_SECRET_KEY"))
+	authService := auth.NewJWTService(jwtSecret)
 
 	// ユースケース初期化
 	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
@@ -106,7 +117,7 @@ func main() {
 
 	// 認証必須エンドポイント
 	protectedV1Router := v1Router.PathPrefix("/").Subrouter()
-	protectedV1Router.Use(middleware.AuthMiddleware(os.Getenv("JWT_SECRET_KEY")))
+	protectedV1Router.Use(middleware.AuthMiddleware(jwtSecret))
 
 	// 投稿
 	postRouter := protectedV1Router.PathPrefix("/posts").Subrouter()
@@ -116,7 +127,7 @@ func main() {
 	postRouter.HandleFunc("/{id}", postController.PatchPost).Methods("PATCH")
 
 	srv := &http.Server{
-		Addr:         ":" + os.Getenv("PORT"),
+		Addr:         ":" + port,
 		Handler:      r,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -133,7 +144,7 @@ func main() {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
-	log.Printf("server is running on port %s\n", os.Getenv("PORT"))
+	log.Printf("server is running on port %s\n", port)
 
 	// シグナルを受け取り、コンテキストをキャンセルする
 	<-ctx.Done()
@@ -147,6 +158,14 @@ func main() {
 	}
 
 	log.Println("server exited properly")
+}
+
+// getEnvOrDefault は環境変数を取得し、設定されていない場合はデフォルト値を返す
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
 
 func loadDevelopEnv() {

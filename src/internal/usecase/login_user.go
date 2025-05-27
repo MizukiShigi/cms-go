@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
 	"github.com/MizukiShigi/cms-go/internal/domain/service"

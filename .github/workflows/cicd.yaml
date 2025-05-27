@@ -1,0 +1,80 @@
+name: CI/CD Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: cms_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.0"
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('src/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        working-directory: ./src
+        run: go mod download
+
+      - name: Verify dependencies
+        working-directory: ./src
+        run: go mod verify
+
+      - name: Run go vet
+        working-directory: ./src
+        run: go vet ./...
+
+      - name: Run go fmt check
+        working-directory: ./src
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "gofmt found unformatted files:"
+            gofmt -s -l .
+            exit 1
+          fi
+
+      - name: Run tests with coverage
+        working-directory: ./src
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/cms_test?sslmode=disable
+          DB_HOST: localhost
+          DB_NAME: cms_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          JWT_SECRET_KEY: test-secret-key-for-ci
+          PORT: 8080
+          GO_ENV: test
+        run: |
+          go test -v -cover ./...

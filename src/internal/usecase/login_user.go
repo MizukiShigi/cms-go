@@ -49,7 +49,11 @@ func (u *LoginUserUsecase) Execute(ctx context.Context, input *LoginUserInput) (
 	}
 
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, valueobject.NewMyError(valueobject.NotFoundCode, "user not found")
+	}
+
+	if !user.Authenticate(input.Password) {
+		return nil, valueobject.NewMyError(valueobject.UnauthorizedCode, "invalid password")
 	}
 
 	token, err := u.authService.GenerateToken(ctx, user.ID, user.Email)

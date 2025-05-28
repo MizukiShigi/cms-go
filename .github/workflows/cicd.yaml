@@ -66,14 +66,5 @@ jobs:
           fi
 
       - name: Run tests with coverage
-        working-directory: ./src
-        env:
-          DB_HOST: localhost
-          DB_NAME: cms_test
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          JWT_SECRET_KEY: test-secret-key-for-ci
-          PORT: 8080
-          GO_ENV: test
         run: |
-          go test -v -cover ./...
+          make test

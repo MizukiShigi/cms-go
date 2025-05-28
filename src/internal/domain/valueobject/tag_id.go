@@ -20,3 +20,7 @@ func ParseTagID(id string) (TagID, error) {
 	}
 	return TagID(uuid.String()), nil
 }
+
+func (t TagID) Equals(other TagID) bool {
+	return t == other
+}

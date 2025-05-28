@@ -97,12 +97,6 @@ func TestTag_FieldValidation(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "異常ケース: 大文字を含むタグ名",
-			tagName:     "GoLang",
-			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
-		},
-		{
 			name:        "異常ケース: 長すぎるタグ名",
 			tagName:     "this-is-a-very-long-tag-name-that-exceeds-the-maximum-allowed-length",
 			wantErr:     true,

@@ -185,62 +185,62 @@ func TestPost_SetStatus(t *testing.T) {
 	content, _ := valueobject.NewPostContent("テストコンテンツ")
 
 	tests := []struct {
-		name         string
+		name          string
 		initialStatus valueobject.PostStatus
 		targetStatus  valueobject.PostStatus
-		wantErr      bool
-		expectedErr  string
+		wantErr       bool
+		expectedErr   string
 	}{
 		{
-			name:         "正常ケース: 下書きから公開",
+			name:          "正常ケース: 下書きから公開",
 			initialStatus: valueobject.StatusDraft,
 			targetStatus:  valueobject.StatusPublished,
-			wantErr:      false,
+			wantErr:       false,
 		},
 		{
-			name:         "正常ケース: 下書きから削除",
+			name:          "正常ケース: 下書きから削除",
 			initialStatus: valueobject.StatusDraft,
 			targetStatus:  valueobject.StatusDeleted,
-			wantErr:      false,
+			wantErr:       false,
 		},
 		{
-			name:         "正常ケース: 公開から非公開",
+			name:          "正常ケース: 公開から非公開",
 			initialStatus: valueobject.StatusPublished,
 			targetStatus:  valueobject.StatusPrivate,
-			wantErr:      false,
+			wantErr:       false,
 		},
 		{
-			name:         "正常ケース: 非公開から公開",
+			name:          "正常ケース: 非公開から公開",
 			initialStatus: valueobject.StatusPrivate,
 			targetStatus:  valueobject.StatusPublished,
-			wantErr:      false,
+			wantErr:       false,
 		},
 		{
-			name:         "正常ケース: 非公開から削除",
+			name:          "正常ケース: 非公開から削除",
 			initialStatus: valueobject.StatusPrivate,
 			targetStatus:  valueobject.StatusDeleted,
-			wantErr:      false,
+			wantErr:       false,
 		},
 		{
-			name:         "異常ケース: 公開から削除（不正な遷移）",
+			name:          "異常ケース: 公開から削除（不正な遷移）",
 			initialStatus: valueobject.StatusPublished,
 			targetStatus:  valueobject.StatusDeleted,
-			wantErr:      true,
-			expectedErr:  "Only draft and private posts can be deleted",
+			wantErr:       true,
+			expectedErr:   "Only draft and private posts can be deleted",
 		},
 		{
-			name:         "異常ケース: 削除から公開（不正な遷移）",
+			name:          "異常ケース: 削除から公開（不正な遷移）",
 			initialStatus: valueobject.StatusDeleted,
 			targetStatus:  valueobject.StatusPublished,
-			wantErr:      true,
-			expectedErr:  "Only draft and private posts can be published",
+			wantErr:       true,
+			expectedErr:   "Only draft and private posts can be published",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			post, _ := NewPost(title, content, userID, tt.initialStatus)
-			
+
 			// 初期状態が公開以外で公開状態に設定したい場合は一度公開状態にする
 			if tt.initialStatus == valueobject.StatusPrivate && post.Status != valueobject.StatusPrivate {
 				post.SetStatus(valueobject.StatusPublished)

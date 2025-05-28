@@ -14,9 +14,9 @@ type JWTService struct {
 }
 
 type Claims struct {
-    UserID string `json:"user_id"`
-    Email  string `json:"email"`
-    jwt.RegisteredClaims
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+	jwt.RegisteredClaims
 }
 
 func NewJWTService(secretKey string) *JWTService {

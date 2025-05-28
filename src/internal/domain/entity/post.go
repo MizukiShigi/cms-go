@@ -94,7 +94,7 @@ func (p *Post) AddTag(tag valueobject.TagName) error {
 func (p *Post) SetStatus(status valueobject.PostStatus) error {
 	if p.Status == status {
 		return nil
-	}	
+	}
 
 	switch status {
 	case valueobject.StatusDraft:

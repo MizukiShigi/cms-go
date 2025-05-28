@@ -31,3 +31,13 @@ docker-build:
 
 docker-push: docker-login docker-build
 	docker push $(REPOSITORY_URL)/$(IMAGE_NAME):$(IMAGE_TAG)
+
+# go tool
+test:
+	cd src && go test $$(go list ./... | grep -v '/infrastructure/db/sqlboiler')
+
+fmt:
+	cd src && go fmt ./...
+
+vet:
+	cd src && go vet ./...

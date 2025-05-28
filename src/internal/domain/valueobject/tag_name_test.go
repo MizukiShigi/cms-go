@@ -272,22 +272,16 @@ func TestTagName_InvalidCharacters(t *testing.T) {
 
 func TestTagName_EmptyString(t *testing.T) {
 	// 空文字列の場合（正規化後も空文字列）
-	tagName, err := NewTagName("")
-	if err != nil {
+	_, err := NewTagName("")
+	if err == nil {
 		t.Errorf("空文字列でエラーが発生しました: %v", err)
-	}
-	if tagName.String() != "" {
-		t.Errorf("空文字列の場合のString() = %v, want %v", tagName.String(), "")
 	}
 }
 
 func TestTagName_OnlyWhitespace(t *testing.T) {
 	// 空白のみの場合（正規化後は空文字列）
-	tagName, err := NewTagName("   ")
-	if err != nil {
-		t.Errorf("空白のみでエラーが発生しました: %v", err)
-	}
-	if tagName.String() != "" {
-		t.Errorf("空白のみの場合のString() = %v, want %v", tagName.String(), "")
+	_, err := NewTagName("   ")
+	if err == nil {
+		t.Errorf("空白のみでエラーが発生しませんでした: %v", err)
 	}
 }

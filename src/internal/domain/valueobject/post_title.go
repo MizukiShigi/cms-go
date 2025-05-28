@@ -10,14 +10,15 @@ type PostTitle string
 
 func NewPostTitle(title string) (PostTitle, error) {
 	normalizedTitle := strings.TrimSpace(title)
+	normalizedTitleRune := []rune(normalizedTitle)
 
-	if len(normalizedTitle) > 200 {
+	if len(normalizedTitleRune) > 200 {
 		return PostTitle(""), NewMyError(InvalidCode, "Title is too long")
 	}
 
 	sanitizedTitle := html.EscapeString(normalizedTitle)
-
-	if len(sanitizedTitle) > 255 {
+	sanitizedTitleRune := []rune(sanitizedTitle)
+	if len(sanitizedTitleRune) > 255 {
 		return PostTitle(""), NewMyError(InvalidCode, "Title contains too many special characters that expand when escaped")
 	}
 

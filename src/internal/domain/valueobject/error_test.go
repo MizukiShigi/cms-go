@@ -202,11 +202,11 @@ func TestReturnMyError(t *testing.T) {
 
 func TestPredefinedErrors(t *testing.T) {
 	tests := []struct {
-		name          string
-		err           *MyError
-		expectedCode  Code
-		expectedMsg   string
-		expectedHTTP  int
+		name         string
+		err          *MyError
+		expectedCode Code
+		expectedMsg  string
+		expectedHTTP int
 	}{
 		{
 			name:         "InvalidRequestError",

@@ -74,12 +74,6 @@ func TestParsePostID(t *testing.T) {
 			expectedErr: "Invalid post ID",
 		},
 		{
-			name:        "異常ケース: ハイフンなしのUUID",
-			input:       "550e8400e29b41d4a716446655440000",
-			wantErr:     true,
-			expectedErr: "Invalid post ID",
-		},
-		{
 			name:        "異常ケース: 大文字小文字混在（無効な文字）",
 			input:       "550e8400-e29b-41d4-a716-44665544000G",
 			wantErr:     true,

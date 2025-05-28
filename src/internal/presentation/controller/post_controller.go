@@ -298,7 +298,7 @@ type PatchPostRequest struct {
 	Title   string   `json:"title" validate:"omitempty,min=1"`
 	Content string   `json:"content" validate:"omitempty,min=1"`
 	Tags    []string `json:"tags"`
-	Status  string   `json:"status" validate:"omitempty,oneof=draft published private deleted"`	
+	Status  string   `json:"status" validate:"omitempty,oneof=draft published private deleted"`
 }
 
 type PatchPostResponse struct {
@@ -318,7 +318,7 @@ func (pc *PostController) PatchPost(w http.ResponseWriter, r *http.Request) {
 		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Required post ID"))
 		return
 	}
-	
+
 	postID, err := valueobject.ParsePostID(id)
 	if err != nil {
 		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid post ID"))
@@ -331,7 +331,7 @@ func (pc *PostController) PatchPost(w http.ResponseWriter, r *http.Request) {
 		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid request payload"))
 		return
 	}
-	
+
 	validate := validator.New()
 	err = validate.Struct(req)
 	if err != nil {

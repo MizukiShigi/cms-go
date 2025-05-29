@@ -31,7 +31,7 @@ func TestLoginUserUsecase_Execute(t *testing.T) {
 
 		// ユーザーを正常に取得
 		mockUserRepo.EXPECT().FindByEmail(context.Background(), email).Return(user, nil)
-		
+
 		// トークン生成が成功
 		mockAuthService.EXPECT().GenerateToken(context.Background(), user.ID, user.Email).
 			Return("test-token", nil)
@@ -94,7 +94,7 @@ func TestLoginUserUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.NotFoundCode, myErr.Code)
@@ -117,7 +117,7 @@ func TestLoginUserUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.UnauthorizedCode, myErr.Code)
@@ -135,7 +135,7 @@ func TestLoginUserUsecase_Execute(t *testing.T) {
 
 		// ユーザーを正常に取得
 		mockUserRepo.EXPECT().FindByEmail(context.Background(), email).Return(user, nil)
-		
+
 		// トークン生成が失敗
 		mockAuthService.EXPECT().GenerateToken(context.Background(), user.ID, user.Email).
 			Return("", valueobject.NewMyError(valueobject.InternalServerErrorCode, "Token generation failed"))

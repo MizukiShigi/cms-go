@@ -55,7 +55,7 @@ func TestRegisterUserUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.InvalidCode, myErr.Code)
@@ -79,7 +79,7 @@ func TestRegisterUserUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.ConflictCode, myErr.Code)

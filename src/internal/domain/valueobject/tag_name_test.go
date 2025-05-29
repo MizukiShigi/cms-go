@@ -48,9 +48,9 @@ func TestNewTagName(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "正常ケース: 日本語を含む",
-			tag:         "プログラミング",
-			wantErr:     false,
+			name:    "正常ケース: 日本語を含む",
+			tag:     "プログラミング",
+			wantErr: false,
 		},
 		{
 			name:    "正常ケース: ハイフンとアンダースコアの組み合わせ",

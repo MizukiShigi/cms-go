@@ -20,13 +20,13 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("タイトルのみの更新が成功する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		oldTitle, _ := valueobject.NewPostTitle("旧タイトル")
 		newTitle, _ := valueobject.NewPostTitle("新タイトル")
 		content, _ := valueobject.NewPostContent("内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 
 		// 既存の投稿
 		oldPost, _ := entity.NewPost(oldTitle, content, userID, status)
@@ -43,10 +43,10 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 		// 既存投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(oldPost, nil)
-		
+
 		// 投稿更新
 		mockPostRepo.EXPECT().Update(context.Background(), gomock.Any()).Return(nil)
-		
+
 		// 更新後の投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(updatedPost, nil)
 
@@ -61,13 +61,13 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("内容のみの更新が成功する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		oldContent, _ := valueobject.NewPostContent("旧内容")
 		newContent, _ := valueobject.NewPostContent("新内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 
 		// 既存の投稿
 		oldPost, _ := entity.NewPost(title, oldContent, userID, status)
@@ -84,10 +84,10 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 		// 既存投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(oldPost, nil)
-		
+
 		// 投稿更新
 		mockPostRepo.EXPECT().Update(context.Background(), gomock.Any()).Return(nil)
-		
+
 		// 更新後の投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(updatedPost, nil)
 
@@ -102,13 +102,13 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("ステータスのみの更新が成功する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		content, _ := valueobject.NewPostContent("内容")
-		userID, _ := valueobject.NewUserID()
-		oldStatus := valueobject.Draft
-		newStatus := valueobject.Published
+		userID := valueobject.NewUserID()
+		oldStatus := valueobject.StatusDraft
+		newStatus := valueobject.StatusPublished
 
 		// 既存の投稿（下書き）
 		oldPost, _ := entity.NewPost(title, content, userID, oldStatus)
@@ -127,10 +127,10 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 		// 既存投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(oldPost, nil)
-		
+
 		// 投稿更新
 		mockPostRepo.EXPECT().Update(context.Background(), gomock.Any()).Return(nil)
-		
+
 		// 更新後の投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(updatedPost, nil)
 
@@ -146,12 +146,12 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("タグのみの更新が成功する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		content, _ := valueobject.NewPostContent("内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 		tag1, _ := valueobject.NewTagName("タグ1")
 		tag2, _ := valueobject.NewTagName("タグ2")
 
@@ -171,10 +171,10 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 		// 既存投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(oldPost, nil)
-		
+
 		// 投稿更新
 		mockPostRepo.EXPECT().Update(context.Background(), gomock.Any()).Return(nil)
-		
+
 		// 更新後の投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(updatedPost, nil)
 
@@ -192,15 +192,15 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("複数フィールドの同時更新が成功する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		oldTitle, _ := valueobject.NewPostTitle("旧タイトル")
 		newTitle, _ := valueobject.NewPostTitle("新タイトル")
 		oldContent, _ := valueobject.NewPostContent("旧内容")
 		newContent, _ := valueobject.NewPostContent("新内容")
-		userID, _ := valueobject.NewUserID()
-		oldStatus := valueobject.Draft
-		newStatus := valueobject.Published
+		userID := valueobject.NewUserID()
+		oldStatus := valueobject.StatusDraft
+		newStatus := valueobject.StatusPublished
 		tag, _ := valueobject.NewTagName("タグ1")
 
 		// 既存の投稿
@@ -222,10 +222,10 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 		// 既存投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(oldPost, nil)
-		
+
 		// 投稿更新
 		mockPostRepo.EXPECT().Update(context.Background(), gomock.Any()).Return(nil)
-		
+
 		// 更新後の投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(updatedPost, nil)
 
@@ -242,8 +242,8 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("投稿が存在しない場合にエラーが発生する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 
 		input := &PatchPostInput{
@@ -259,7 +259,7 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.NotFoundCode, myErr.Code)
@@ -267,13 +267,13 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("不正なステータス遷移でエラーが発生する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		content, _ := valueobject.NewPostContent("内容")
-		userID, _ := valueobject.NewUserID()
-		currentStatus := valueobject.Published
-		invalidStatus := valueobject.Draft // 公開済みから下書きには戻せない
+		userID := valueobject.NewUserID()
+		currentStatus := valueobject.StatusPublished
+		invalidStatus := valueobject.StatusDraft // 公開済みから下書きには戻せない
 
 		// 既存の投稿（公開済み）
 		post, _ := entity.NewPost(title, content, userID, currentStatus)
@@ -295,12 +295,12 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 	t.Run("投稿更新に失敗する", func(t *testing.T) {
 		usecase := NewPatchPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		content, _ := valueobject.NewPostContent("内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 
 		post, _ := entity.NewPost(title, content, userID, status)
 		post.ID = postID
@@ -314,7 +314,7 @@ func TestPatchPostUsecase_Execute(t *testing.T) {
 
 		// 既存投稿取得
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(post, nil)
-		
+
 		// 投稿更新が失敗
 		mockPostRepo.EXPECT().Update(context.Background(), gomock.Any()).
 			Return(valueobject.NewMyError(valueobject.InternalServerErrorCode, "Update failed"))

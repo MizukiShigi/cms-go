@@ -45,7 +45,10 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 	}
 
 	for _, tag := range input.Tags {
-		post.AddTag(tag)
+		err := post.AddTag(tag)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	transactionErr := u.transactionManager.Transaction(ctx, func(ctx context.Context) error {

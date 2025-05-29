@@ -20,16 +20,16 @@ func TestGetPostUsecase_Execute(t *testing.T) {
 
 	t.Run("公開済み投稿の取得が成功する", func(t *testing.T) {
 		usecase := NewGetPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
-		
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
+
 		post, _ := entity.NewPost(title, content, userID, status)
 		post.ID = postID
-		
+
 		now := time.Now()
 		post.FirstPublishedAt = &now
 		post.ContentUpdatedAt = &now
@@ -54,19 +54,23 @@ func TestGetPostUsecase_Execute(t *testing.T) {
 
 	t.Run("下書き投稿の取得が成功する", func(t *testing.T) {
 		usecase := NewGetPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("下書き投稿")
 		content, _ := valueobject.NewPostContent("下書き内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Draft
-		
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusDraft
+
 		post, _ := entity.NewPost(title, content, userID, status)
 		post.ID = postID
 
 		input := &GetPostInput{
 			ID: postID,
 		}
+
+		now := time.Now()
+		post.ContentUpdatedAt = &now
+		post.FirstPublishedAt = nil
 
 		mockPostRepo.EXPECT().Get(context.Background(), postID).Return(post, nil)
 
@@ -78,14 +82,14 @@ func TestGetPostUsecase_Execute(t *testing.T) {
 		assert.Equal(t, title, output.Title)
 		assert.Equal(t, content, output.Content)
 		assert.Equal(t, status, output.Status)
+		assert.Equal(t, now, *output.ContentUpdatedAt)
 		assert.Nil(t, output.FirstPublishedAt)
-		assert.Nil(t, output.ContentUpdatedAt)
 	})
 
 	t.Run("投稿が存在しない場合にエラーが発生する", func(t *testing.T) {
 		usecase := NewGetPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 
 		input := &GetPostInput{
 			ID: postID,
@@ -98,7 +102,7 @@ func TestGetPostUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.NotFoundCode, myErr.Code)
@@ -106,8 +110,8 @@ func TestGetPostUsecase_Execute(t *testing.T) {
 
 	t.Run("リポジトリエラーでエラーが発生する", func(t *testing.T) {
 		usecase := NewGetPostUsecase(mockPostRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 
 		input := &GetPostInput{
 			ID: postID,
@@ -120,7 +124,7 @@ func TestGetPostUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.InternalServerErrorCode, myErr.Code)

@@ -21,11 +21,11 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("タグありの投稿作成が成功する", func(t *testing.T) {
 		usecase := NewCreatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
+
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 		tagName1, _ := valueobject.NewTagName("タグ1")
 		tagName2, _ := valueobject.NewTagName("タグ2")
 
@@ -45,14 +45,14 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 				// 投稿作成
 				mockPostRepo.EXPECT().Create(ctx, gomock.Any()).Return(nil)
-				
+
 				// タグ作成/取得
 				mockTagRepo.EXPECT().FindOrCreateByName(ctx, gomock.Any()).Return(tag1, nil)
 				mockTagRepo.EXPECT().FindOrCreateByName(ctx, gomock.Any()).Return(tag2, nil)
-				
+
 				// タグ設定
 				mockPostRepo.EXPECT().SetTags(ctx, gomock.Any(), gomock.Any()).Return(nil)
-				
+
 				return fn(ctx)
 			})
 
@@ -68,11 +68,11 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("タグなしの投稿作成が成功する", func(t *testing.T) {
 		usecase := NewCreatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
+
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 
 		input := &CreatePostInput{
 			Title:   title,
@@ -87,10 +87,10 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 				// 投稿作成
 				mockPostRepo.EXPECT().Create(ctx, gomock.Any()).Return(nil)
-				
+
 				// タグなしなのでSetTagsのみ
 				mockPostRepo.EXPECT().SetTags(ctx, gomock.Any(), gomock.Any()).Return(nil)
-				
+
 				return fn(ctx)
 			})
 
@@ -106,11 +106,11 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("投稿作成に失敗する", func(t *testing.T) {
 		usecase := NewCreatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
+
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 
 		input := &CreatePostInput{
 			Title:   title,
@@ -125,7 +125,7 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 				mockPostRepo.EXPECT().Create(ctx, gomock.Any()).
 					Return(valueobject.NewMyError(valueobject.InternalServerErrorCode, "Database error"))
-				
+
 				return fn(ctx)
 			})
 
@@ -133,7 +133,7 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.InternalServerErrorCode, myErr.Code)
@@ -141,11 +141,11 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("タグ作成に失敗する", func(t *testing.T) {
 		usecase := NewCreatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
+
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 		tagName, _ := valueobject.NewTagName("タグ1")
 
 		input := &CreatePostInput{
@@ -162,7 +162,7 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 				mockPostRepo.EXPECT().Create(ctx, gomock.Any()).Return(nil)
 				mockTagRepo.EXPECT().FindOrCreateByName(ctx, gomock.Any()).
 					Return(nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Tag creation failed"))
-				
+
 				return fn(ctx)
 			})
 
@@ -170,7 +170,7 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.InternalServerErrorCode, myErr.Code)
@@ -178,11 +178,11 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("タグ設定に失敗する", func(t *testing.T) {
 		usecase := NewCreatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
+
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 		tagName, _ := valueobject.NewTagName("タグ1")
 
 		input := &CreatePostInput{
@@ -202,7 +202,7 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 				mockTagRepo.EXPECT().FindOrCreateByName(ctx, gomock.Any()).Return(tag, nil)
 				mockPostRepo.EXPECT().SetTags(ctx, gomock.Any(), gomock.Any()).
 					Return(valueobject.NewMyError(valueobject.InternalServerErrorCode, "Set tags failed"))
-				
+
 				return fn(ctx)
 			})
 
@@ -210,7 +210,7 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
-		
+
 		var myErr *valueobject.MyError
 		assert.ErrorAs(t, err, &myErr)
 		assert.Equal(t, valueobject.InternalServerErrorCode, myErr.Code)
@@ -218,11 +218,11 @@ func TestCreatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("トランザクション自体が失敗する", func(t *testing.T) {
 		usecase := NewCreatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
+
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 
 		input := &CreatePostInput{
 			Title:   title,

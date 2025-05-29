@@ -106,7 +106,7 @@ func TestTag_FieldValidation(t *testing.T) {
 			name:        "異常ケース: 特殊文字を含むタグ名",
 			tagName:     "go@lang",
 			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
+			expectedErr: "TagName can only contain Japanese characters, letters, numbers, hyphens, and underscores",
 		},
 	}
 

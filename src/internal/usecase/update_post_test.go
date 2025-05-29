@@ -22,14 +22,14 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("全項目の投稿更新が成功する", func(t *testing.T) {
 		usecase := NewUpdatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		oldTitle, _ := valueobject.NewPostTitle("旧タイトル")
 		oldContent, _ := valueobject.NewPostContent("旧内容")
 		newTitle, _ := valueobject.NewPostTitle("新タイトル")
 		newContent, _ := valueobject.NewPostContent("新内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 		tagName, _ := valueobject.NewTagName("タグ1")
 
 		// 既存の投稿
@@ -63,13 +63,13 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 				// 投稿更新
 				mockPostRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
-				
+
 				// タグ作成/取得
 				mockTagRepo.EXPECT().FindOrCreateByName(ctx, gomock.Any()).Return(tag, nil)
-				
+
 				// タグ設定
 				mockPostRepo.EXPECT().SetTags(ctx, gomock.Any(), gomock.Any()).Return(nil)
-				
+
 				return fn(ctx)
 			})
 
@@ -90,14 +90,14 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("タグなしの投稿更新が成功する", func(t *testing.T) {
 		usecase := NewUpdatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		oldTitle, _ := valueobject.NewPostTitle("旧タイトル")
 		oldContent, _ := valueobject.NewPostContent("旧内容")
 		newTitle, _ := valueobject.NewPostTitle("新タイトル")
 		newContent, _ := valueobject.NewPostContent("新内容")
-		userID, _ := valueobject.NewUserID()
-		status := valueobject.Published
+		userID := valueobject.NewUserID()
+		status := valueobject.StatusPublished
 
 		// 既存の投稿
 		oldPost, _ := entity.NewPost(oldTitle, oldContent, userID, status)
@@ -123,10 +123,10 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 				// 投稿更新
 				mockPostRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
-				
+
 				// タグなしなのでSetTagsのみ
 				mockPostRepo.EXPECT().SetTags(ctx, gomock.Any(), gomock.Any()).Return(nil)
-				
+
 				return fn(ctx)
 			})
 
@@ -144,8 +144,8 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("投稿が存在しない場合にエラーが発生する", func(t *testing.T) {
 		usecase := NewUpdatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		content, _ := valueobject.NewPostContent("内容")
 
@@ -154,7 +154,7 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 			Title:   title,
 			Content: content,
 			Tags:    []valueobject.TagName{},
-			Status:  valueobject.Published,
+			Status:  valueobject.StatusPublished,
 		}
 
 		// 投稿が見つからない
@@ -169,13 +169,13 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("投稿更新に失敗する", func(t *testing.T) {
 		usecase := NewUpdatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		content, _ := valueobject.NewPostContent("内容")
-		userID, _ := valueobject.NewUserID()
+		userID := valueobject.NewUserID()
 
-		post, _ := entity.NewPost(title, content, userID, valueobject.Published)
+		post, _ := entity.NewPost(title, content, userID, valueobject.StatusPublished)
 		post.ID = postID
 
 		input := &UpdatePostInput{
@@ -183,7 +183,7 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 			Title:   title,
 			Content: content,
 			Tags:    []valueobject.TagName{},
-			Status:  valueobject.Published,
+			Status:  valueobject.StatusPublished,
 		}
 
 		// 既存投稿取得
@@ -194,7 +194,7 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, fn func(context.Context) error) error {
 				mockPostRepo.EXPECT().Update(ctx, gomock.Any()).
 					Return(valueobject.NewMyError(valueobject.InternalServerErrorCode, "Update failed"))
-				
+
 				return fn(ctx)
 			})
 
@@ -206,14 +206,14 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 
 	t.Run("タグ作成に失敗する", func(t *testing.T) {
 		usecase := NewUpdatePostUsecase(mockTransactionManager, mockPostRepo, mockTagRepo)
-		
-		postID, _ := valueobject.NewPostID()
+
+		postID := valueobject.NewPostID()
 		title, _ := valueobject.NewPostTitle("タイトル")
 		content, _ := valueobject.NewPostContent("内容")
-		userID, _ := valueobject.NewUserID()
+		userID := valueobject.NewUserID()
 		tagName, _ := valueobject.NewTagName("タグ1")
 
-		post, _ := entity.NewPost(title, content, userID, valueobject.Published)
+		post, _ := entity.NewPost(title, content, userID, valueobject.StatusPublished)
 		post.ID = postID
 
 		input := &UpdatePostInput{
@@ -221,7 +221,7 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 			Title:   title,
 			Content: content,
 			Tags:    []valueobject.TagName{tagName},
-			Status:  valueobject.Published,
+			Status:  valueobject.StatusPublished,
 		}
 
 		// 既存投稿取得
@@ -233,7 +233,7 @@ func TestUpdatePostUsecase_Execute(t *testing.T) {
 				mockPostRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
 				mockTagRepo.EXPECT().FindOrCreateByName(ctx, gomock.Any()).
 					Return(nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Tag creation failed"))
-				
+
 				return fn(ctx)
 			})
 

@@ -23,9 +23,9 @@ type Post struct {
 // 新規投稿作成
 func NewPost(title valueobject.PostTitle, content valueobject.PostContent, userID valueobject.UserID, status valueobject.PostStatus) (*Post, error) {
 	now := time.Now()
-	var firstPublishedAt time.Time
+	var firstPublishedAt *time.Time
 	if status == valueobject.StatusPublished {
-		firstPublishedAt = now
+		firstPublishedAt = &now
 	}
 
 	post := &Post{
@@ -34,7 +34,7 @@ func NewPost(title valueobject.PostTitle, content valueobject.PostContent, userI
 		Content:          content,
 		UserID:           userID,
 		Status:           status,
-		FirstPublishedAt: &firstPublishedAt,
+		FirstPublishedAt: firstPublishedAt,
 		ContentUpdatedAt: &now,
 		CreatedAt:        now,
 		UpdatedAt:        now,
@@ -128,11 +128,10 @@ func (p *Post) publish() error {
 	p.Status = valueobject.StatusPublished
 
 	now := time.Now()
-	if p.FirstPublishedAt == nil {
+	if p.FirstPublishedAt == nil || p.FirstPublishedAt.IsZero() {
 		p.FirstPublishedAt = &now
 	}
 
-	p.Status = valueobject.StatusPublished
 	p.ContentUpdatedAt = &now
 	return nil
 }

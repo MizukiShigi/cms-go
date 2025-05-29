@@ -33,11 +33,6 @@ func TestNewTagName(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "正常ケース: 大文字が小文字に変換される",
-			tag:     "JavaScript",
-			wantErr: false,
-		},
-		{
 			name:    "正常ケース: 前後に空白があるタグ",
 			tag:     "  programming  ",
 			wantErr: false,
@@ -51,6 +46,11 @@ func TestNewTagName(t *testing.T) {
 			name:    "正常ケース: 数字のみ",
 			tag:     "2023",
 			wantErr: false,
+		},
+		{
+			name:        "正常ケース: 日本語を含む",
+			tag:         "プログラミング",
+			wantErr:     false,
 		},
 		{
 			name:    "正常ケース: ハイフンとアンダースコアの組み合わせ",
@@ -73,43 +73,37 @@ func TestNewTagName(t *testing.T) {
 			name:        "異常ケース: スペースを含む",
 			tag:         "web development",
 			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
+			expectedErr: "TagName can only contain Japanese characters, letters, numbers, hyphens, and underscores",
 		},
 		{
 			name:        "異常ケース: 特殊文字を含む",
 			tag:         "tech!",
 			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
-		},
-		{
-			name:        "異常ケース: 日本語を含む",
-			tag:         "プログラミング",
-			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
+			expectedErr: "TagName can only contain Japanese characters, letters, numbers, hyphens, and underscores",
 		},
 		{
 			name:        "異常ケース: ドットを含む",
 			tag:         "node.js",
 			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
+			expectedErr: "TagName can only contain Japanese characters, letters, numbers, hyphens, and underscores",
 		},
 		{
 			name:        "異常ケース: カンマを含む",
 			tag:         "web,dev",
 			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
+			expectedErr: "TagName can only contain Japanese characters, letters, numbers, hyphens, and underscores",
 		},
 		{
 			name:        "異常ケース: アットマークを含む",
 			tag:         "@tag",
 			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
+			expectedErr: "TagName can only contain Japanese characters, letters, numbers, hyphens, and underscores",
 		},
 		{
 			name:        "異常ケース: スラッシュを含む",
 			tag:         "web/dev",
 			wantErr:     true,
-			expectedErr: "TagName can only contain lowercase letters, numbers, hyphens, and underscores",
+			expectedErr: "TagName can only contain Japanese characters, letters, numbers, hyphens, and underscores",
 		},
 	}
 
@@ -182,19 +176,9 @@ func TestTagName_Normalization(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "大文字が小文字に変換される",
-			input:    "JavaScript",
-			expected: "javascript",
-		},
-		{
 			name:     "前後の空白が削除される",
 			input:    "  golang  ",
 			expected: "golang",
-		},
-		{
-			name:     "大文字と空白の組み合わせ",
-			input:    "  WEB-DEV  ",
-			expected: "web-dev",
 		},
 		{
 			name:     "すでに正規化されている場合",
@@ -257,7 +241,7 @@ func TestTagName_InvalidCharacters(t *testing.T) {
 	invalidChars := []string{
 		" ", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
 		"+", "=", "[", "]", "{", "}", "|", "\\", ":", ";", "\"",
-		"'", "<", ">", ",", ".", "?", "/", "あ", "漢字",
+		"'", "<", ">", ",", ".", "?", "/",
 	}
 
 	for _, char := range invalidChars {

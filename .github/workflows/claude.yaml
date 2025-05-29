@@ -17,11 +17,6 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-      actions: read
-      repository-projects: write
-      statuses: write
-      checks: write
-
 
     steps:
       - name: Checkout repository
@@ -37,4 +32,4 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          trigger_phrase: "@claude"
+          allowed_tools: "bash,git,gh"

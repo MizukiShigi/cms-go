@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths: ["src/**"] # src/配下の変更のみでトリガー
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths: ["src/**"]
 
 env:
@@ -79,9 +79,33 @@ jobs:
         run: |
           make test
 
+  need-deploy:
+      runs-on: ubuntu-latest
+      outputs:
+        should-deploy: ${{ steps.changes.outputs.should-deploy }}
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 2
+            
+        - name: Check if deployment is needed
+          id: changes
+          run: |
+            # デプロイ対象のファイル変更かチェック
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            NON_TEST_CHANGES=$(echo "$CHANGED_FILES" | grep -v -E '(_test\.go|\.md|^docs/|^\.github/)' || true)
+            
+            if [ -z "$NON_TEST_CHANGES" ]; then
+              echo "should-deploy=false" >> $GITHUB_OUTPUT
+              echo "Only test files or docs changed, skipping deployment"
+            else
+              echo "should-deploy=true" >> $GITHUB_OUTPUT
+              echo "Application code changed, deployment needed"
+            fi
+
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: needs.need-deploy.outputs.should-deploy == 'true' && github.event_name == 'push'
 
     permissions:
       contents: read

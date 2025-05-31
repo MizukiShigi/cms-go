@@ -1,4 +1,4 @@
--- migrations/001_initial_schema.sql
+-- migrations/initial_schema.sql
 
 -- ユーザーテーブル
 CREATE TABLE IF NOT EXISTS users (
@@ -38,8 +38,24 @@ CREATE TABLE IF NOT EXISTS post_tags (
     PRIMARY KEY (post_id, tag_id)
 );
 
+-- 画像テーブル（投稿との1対多関係）
+CREATE TABLE IF NOT EXISTS images (
+    id UUID PRIMARY KEY,
+    original_filename VARCHAR(255) NOT NULL,
+    stored_filename VARCHAR(255) NOT NULL UNIQUE,
+    gcs_url VARCHAR(500) NOT NULL,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- インデックス
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_posts_author_id ON posts(author_id);
-CREATE INDEX idx_posts_status ON posts(status);
-CREATE INDEX idx_post_tags_tag_id ON post_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
+CREATE INDEX IF NOT EXISTS idx_post_tags_tag_id ON post_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_images_user_id ON images(user_id);
+CREATE INDEX IF NOT EXISTS idx_images_created_at ON images(created_at);
+CREATE INDEX IF NOT EXISTS idx_images_sort_order ON images(post_id, sort_order);

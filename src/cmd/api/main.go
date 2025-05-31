@@ -59,7 +59,7 @@ func main() {
 		"db_name", name,
 		"db_user", user,
 		"port", port,
-		"env", os.Getenv("GO_ENV"))
+		"env", os.Getenv("ENV"))
 
 	encodedPassword := url.QueryEscape(password)
 

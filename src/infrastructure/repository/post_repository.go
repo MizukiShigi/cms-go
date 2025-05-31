@@ -11,6 +11,7 @@ import (
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
@@ -51,7 +52,7 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) error {
 }
 
 func (r *PostRepository) Get(ctx context.Context, id valueobject.PostID) (*entity.Post, error) {
-	dbPost, err := models.FindPost(ctx, r.db, id.String())
+	dbPost, err := models.Posts(qm.Where("id = ?", id.String()), qm.Load("Tags")).One(ctx, r.db)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, valueobject.NewMyError(valueobject.NotFoundCode, "Post not found")

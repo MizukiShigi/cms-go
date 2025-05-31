@@ -174,7 +174,6 @@ func loadDevelopEnv() {
 		// 開発環境のみ .env ファイルを読み込む
 		if err := godotenv.Load(".env.development"); err != nil {
 			log.Printf(".env.development ファイルが見つかりません（本番環境では正常）: %v", err)
-			// log.Fatalf → log.Printf に変更してアプリを継続
 		}
 	}
 }

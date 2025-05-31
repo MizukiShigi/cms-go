@@ -177,7 +177,7 @@ func loadLocalEnv() {
 	if env == "local" || env == "" {
 		// ローカル環境のみ .env ファイルを読み込む
 		if err := godotenv.Load(".env.development"); err != nil {
-			log.Printf(".env.development ファイルが見つかりません: %v", err)
+			log.Fatalf(".env.development ファイルが見つかりません: %v", err)
 		}
 	}
 }

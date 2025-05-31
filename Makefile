@@ -13,7 +13,7 @@ plan:
 	cd infra/terraform-cloudrun-api && terraform plan
 
 apply:
-	cd infra/terraform-cloudrun-api && terraform apply -var="container_image=$(REPOSITORY_URL)/$(IMAGE_NAME):$(IMAGE_TAG)"
+	cd infra/terraform-cloudrun-api && terraform apply
 
 destroy:
 	cd infra/terraform-cloudrun-api && terraform destroy

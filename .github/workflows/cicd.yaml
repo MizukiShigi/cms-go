@@ -1,14 +1,24 @@
-name: CI/CD Tests
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
+    paths: ["src/**"] # src/配下の変更のみでトリガー
   pull_request:
     branches: [main, develop]
+    paths: ["src/**"]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: asia-northeast1
+  REPOSITORY: ${{ secrets.GCP_PROJECT_ID }}-repo
+  SERVICE_NAME: ${{ secrets.GCP_PROJECT_ID }}-api
+  IMAGE_NAME: cms-api
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
 
     services:
       postgres:
@@ -68,3 +78,43 @@ jobs:
       - name: Run tests with coverage
         run: |
           make test
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and tag Docker image
+        run: |
+          docker build --platform linux/amd64 --target prd -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ./src
+
+      - name: Push Docker image to Artifact Registry
+        run: |
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          flags: "--update-env-vars=IMAGE_TAG=${{ github.sha }}"

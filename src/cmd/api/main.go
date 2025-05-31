@@ -27,8 +27,8 @@ import (
 )
 
 func main() {
-	// 開発環境用環境変数ファイル読み込み
-	loadDevelopEnv()
+	// ローカル環境用環境変数ファイル読み込み
+	loadLocalEnv()
 
 	// ロギング設定
 	baseHadler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -38,6 +38,7 @@ func main() {
 	slog.SetDefault(slog.New(customHandler))
 
 	// 環境変数の検証とデフォルト値設定
+	env := os.Getenv("ENV")
 	host := getEnvOrDefault("DB_HOST", "localhost")
 	name := getEnvOrDefault("DB_NAME", "cms_dev")
 	user := getEnvOrDefault("DB_USER", "postgres")
@@ -46,6 +47,9 @@ func main() {
 	port := getEnvOrDefault("PORT", "8080")
 
 	// 必須環境変数の検証
+	if env == "" {
+		log.Fatal("ENV environment variable is required")
+	}
 	if jwtSecret == "" {
 		log.Fatal("JWT_SECRET_KEY environment variable is required")
 	}
@@ -168,12 +172,12 @@ func getEnvOrDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-func loadDevelopEnv() {
-	env := os.Getenv("GO_ENV")
-	if env == "" || env == "development" {
-		// 開発環境のみ .env ファイルを読み込む
+func loadLocalEnv() {
+	env := os.Getenv("ENV")
+	if env == "local" || env == "" {
+		// ローカル環境のみ .env ファイルを読み込む
 		if err := godotenv.Load(".env.development"); err != nil {
-			log.Printf(".env.development ファイルが見つかりません（本番環境では正常）: %v", err)
+			log.Printf(".env.development ファイルが見つかりません: %v", err)
 		}
 	}
 }

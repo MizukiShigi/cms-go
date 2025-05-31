@@ -12,72 +12,85 @@ import "testing"
 // It does NOT run each operation group in parallel.
 // Separating the tests thusly grants avoidance of Postgres deadlocks.
 func TestParent(t *testing.T) {
+	t.Run("Images", testImages)
 	t.Run("Posts", testPosts)
 	t.Run("Tags", testTags)
 	t.Run("Users", testUsers)
 }
 
 func TestDelete(t *testing.T) {
+	t.Run("Images", testImagesDelete)
 	t.Run("Posts", testPostsDelete)
 	t.Run("Tags", testTagsDelete)
 	t.Run("Users", testUsersDelete)
 }
 
 func TestQueryDeleteAll(t *testing.T) {
+	t.Run("Images", testImagesQueryDeleteAll)
 	t.Run("Posts", testPostsQueryDeleteAll)
 	t.Run("Tags", testTagsQueryDeleteAll)
 	t.Run("Users", testUsersQueryDeleteAll)
 }
 
 func TestSliceDeleteAll(t *testing.T) {
+	t.Run("Images", testImagesSliceDeleteAll)
 	t.Run("Posts", testPostsSliceDeleteAll)
 	t.Run("Tags", testTagsSliceDeleteAll)
 	t.Run("Users", testUsersSliceDeleteAll)
 }
 
 func TestExists(t *testing.T) {
+	t.Run("Images", testImagesExists)
 	t.Run("Posts", testPostsExists)
 	t.Run("Tags", testTagsExists)
 	t.Run("Users", testUsersExists)
 }
 
 func TestFind(t *testing.T) {
+	t.Run("Images", testImagesFind)
 	t.Run("Posts", testPostsFind)
 	t.Run("Tags", testTagsFind)
 	t.Run("Users", testUsersFind)
 }
 
 func TestBind(t *testing.T) {
+	t.Run("Images", testImagesBind)
 	t.Run("Posts", testPostsBind)
 	t.Run("Tags", testTagsBind)
 	t.Run("Users", testUsersBind)
 }
 
 func TestOne(t *testing.T) {
+	t.Run("Images", testImagesOne)
 	t.Run("Posts", testPostsOne)
 	t.Run("Tags", testTagsOne)
 	t.Run("Users", testUsersOne)
 }
 
 func TestAll(t *testing.T) {
+	t.Run("Images", testImagesAll)
 	t.Run("Posts", testPostsAll)
 	t.Run("Tags", testTagsAll)
 	t.Run("Users", testUsersAll)
 }
 
 func TestCount(t *testing.T) {
+	t.Run("Images", testImagesCount)
 	t.Run("Posts", testPostsCount)
 	t.Run("Tags", testTagsCount)
 	t.Run("Users", testUsersCount)
 }
 
 func TestHooks(t *testing.T) {
+	t.Run("Images", testImagesHooks)
 	t.Run("Posts", testPostsHooks)
 	t.Run("Tags", testTagsHooks)
 	t.Run("Users", testUsersHooks)
 }
 
 func TestInsert(t *testing.T) {
+	t.Run("Images", testImagesInsert)
+	t.Run("Images", testImagesInsertWhitelist)
 	t.Run("Posts", testPostsInsert)
 	t.Run("Posts", testPostsInsertWhitelist)
 	t.Run("Tags", testTagsInsert)
@@ -87,30 +100,35 @@ func TestInsert(t *testing.T) {
 }
 
 func TestReload(t *testing.T) {
+	t.Run("Images", testImagesReload)
 	t.Run("Posts", testPostsReload)
 	t.Run("Tags", testTagsReload)
 	t.Run("Users", testUsersReload)
 }
 
 func TestReloadAll(t *testing.T) {
+	t.Run("Images", testImagesReloadAll)
 	t.Run("Posts", testPostsReloadAll)
 	t.Run("Tags", testTagsReloadAll)
 	t.Run("Users", testUsersReloadAll)
 }
 
 func TestSelect(t *testing.T) {
+	t.Run("Images", testImagesSelect)
 	t.Run("Posts", testPostsSelect)
 	t.Run("Tags", testTagsSelect)
 	t.Run("Users", testUsersSelect)
 }
 
 func TestUpdate(t *testing.T) {
+	t.Run("Images", testImagesUpdate)
 	t.Run("Posts", testPostsUpdate)
 	t.Run("Tags", testTagsUpdate)
 	t.Run("Users", testUsersUpdate)
 }
 
 func TestSliceUpdateAll(t *testing.T) {
+	t.Run("Images", testImagesSliceUpdateAll)
 	t.Run("Posts", testPostsSliceUpdateAll)
 	t.Run("Tags", testTagsSliceUpdateAll)
 	t.Run("Users", testUsersSliceUpdateAll)

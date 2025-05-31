@@ -41,3 +41,7 @@ fmt:
 
 vet:
 	cd src && go vet ./...
+
+# DBマイグレーション
+migration:
+	cd src && sqlboiler psql

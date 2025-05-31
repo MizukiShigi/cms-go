@@ -494,6 +494,84 @@ func testPostsInsertWhitelist(t *testing.T) {
 	}
 }
 
+func testPostToManyImages(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Post
+	var b, c Image
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, postDBTypes, true, postColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Post struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, imageDBTypes, false, imageColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, imageDBTypes, false, imageColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	b.PostID = a.ID
+	c.PostID = a.ID
+
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.Images().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if v.PostID == b.PostID {
+			bFound = true
+		}
+		if v.PostID == c.PostID {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := PostSlice{&a}
+	if err = a.L.LoadImages(ctx, tx, false, (*[]*Post)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.Images); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.Images = nil
+	if err = a.L.LoadImages(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.Images); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
 func testPostToManyTags(t *testing.T) {
 	var err error
 	ctx := context.Background()
@@ -578,6 +656,81 @@ func testPostToManyTags(t *testing.T) {
 	}
 }
 
+func testPostToManyAddOpImages(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Post
+	var b, c, d, e Image
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, postDBTypes, false, strmangle.SetComplement(postPrimaryKeyColumns, postColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Image{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, imageDBTypes, false, strmangle.SetComplement(imagePrimaryKeyColumns, imageColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*Image{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddImages(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if a.ID != first.PostID {
+			t.Error("foreign key was wrong value", a.ID, first.PostID)
+		}
+		if a.ID != second.PostID {
+			t.Error("foreign key was wrong value", a.ID, second.PostID)
+		}
+
+		if first.R.Post != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+		if second.R.Post != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+
+		if a.R.Images[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.Images[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.Images().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
 func testPostToManyAddOpTags(t *testing.T) {
 	var err error
 

@@ -8,7 +8,7 @@ import (
 
 type Image struct {
 	ID               valueobject.ImageID
-	OriginalFilename string
+	OriginalFilename valueobject.ImageFilename
 	StoredFilename   string
 	GCSURL           string
 	PostID           valueobject.PostID
@@ -18,7 +18,7 @@ type Image struct {
 	UpdatedAt        time.Time
 }
 
-func NewImage(originalFilename string, storedFilename string, gcsURL string, postID valueobject.PostID, userID valueobject.UserID, sortOrder int) *Image {
+func NewImage(originalFilename valueobject.ImageFilename, storedFilename string, gcsURL string, postID valueobject.PostID, userID valueobject.UserID, sortOrder int) *Image {
 	now := time.Now()
 	return &Image{
 		ID:               valueobject.NewImageID(),
@@ -35,7 +35,7 @@ func NewImage(originalFilename string, storedFilename string, gcsURL string, pos
 
 func ParseImage(
 	id valueobject.ImageID,
-	originalFilename string,
+	originalFilename valueobject.ImageFilename,
 	storedFilename string,
 	gcsURL string,
 	postID valueobject.PostID,

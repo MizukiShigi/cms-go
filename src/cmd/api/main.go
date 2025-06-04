@@ -13,11 +13,12 @@ import (
 	"syscall"
 	"time"
 
+	"cloud.google.com/go/storage"
 	_ "github.com/lib/pq"
 
-	"github.com/MizukiShigi/cms-go/infrastructure/auth"
 	"github.com/MizukiShigi/cms-go/infrastructure/logger"
 	"github.com/MizukiShigi/cms-go/infrastructure/repository"
+	"github.com/MizukiShigi/cms-go/infrastructure/service"
 	"github.com/MizukiShigi/cms-go/internal/presentation/controller"
 	"github.com/MizukiShigi/cms-go/internal/presentation/middleware"
 
@@ -80,14 +81,19 @@ func main() {
 		log.Fatalf("データベース接続エラー: %v", err)
 	}
 
+	// GCPクライアント初期化
+	gcsClient := getGCSlient()
+
 	// リポジトリ初期化
 	transactionManager := repository.NewTransactionManager(db)
 	userRepository := repository.NewUserRepository(db)
 	postRepository := repository.NewPostRepository(db)
 	tagRepository := repository.NewTagRepository(db)
+	imageRepository := repository.NewImageRepository(db)
 
 	// サービス初期化
-	authService := auth.NewJWTService(jwtSecret)
+	authService := service.NewJWTService(jwtSecret)
+	storageService := service.NewStorageService(gcsClient)
 
 	// ユースケース初期化
 	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
@@ -96,11 +102,12 @@ func main() {
 	getPostUsecase := usecase.NewGetPostUsecase(postRepository)
 	updatePostUsecase := usecase.NewUpdatePostUsecase(transactionManager, postRepository, tagRepository)
 	patchPostUsecase := usecase.NewPatchPostUsecase(postRepository)
+	createImageUsecase := usecase.NewCreateImageUsecase(imageRepository, storageService)
 
 	// コントローラー初期化
 	authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
 	postController := controller.NewPostController(createPostUsecase, getPostUsecase, updatePostUsecase, patchPostUsecase)
-
+	imageController := controller.NewImageController(createImageUsecase)
 	// ルーティング設定
 	r := mux.NewRouter()
 
@@ -111,7 +118,7 @@ func main() {
 	// バージョニング
 	v1Router := r.PathPrefix("/cms/v1").Subrouter()
 
-	// 認証不要エンドポイント
+	// 認証不要パス
 	publicV1Router := v1Router.PathPrefix("/").Subrouter()
 
 	// 認証
@@ -119,16 +126,22 @@ func main() {
 	authRouter.HandleFunc("/register", authController.Register).Methods("POST")
 	authRouter.HandleFunc("/login", authController.Login).Methods("POST")
 
-	// 認証必須エンドポイント
+	// 認証必須パス
 	protectedV1Router := v1Router.PathPrefix("/").Subrouter()
 	protectedV1Router.Use(middleware.AuthMiddleware(jwtSecret))
 
 	// 投稿
 	postRouter := protectedV1Router.PathPrefix("/posts").Subrouter()
-	postRouter.HandleFunc("/", postController.CreatePost).Methods("POST")
+	postRouter.HandleFunc("", postController.CreatePost).Methods("POST")
 	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
 	postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
 	postRouter.HandleFunc("/{id}", postController.PatchPost).Methods("PATCH")
+
+	// 画像
+	imageRouter := protectedV1Router.PathPrefix("/images").Subrouter()
+	imageRouter.HandleFunc("", imageController.CreateImage).Methods("POST")
+	// imageRouter.HandleFunc("/{id}", imageController.GetImage).Methods("GET")
+	// imageRouter.HandleFunc("/{id}", imageController.UpdateImage).Methods("DELETE")
 
 	srv := &http.Server{
 		Addr:         ":" + port,
@@ -180,4 +193,12 @@ func loadLocalEnv() {
 			log.Fatalf(".env.development ファイルが見つかりません: %v", err)
 		}
 	}
+}
+
+func getGCSlient() *storage.Client {
+	client, err := storage.NewClient(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to create GCS client: %v", err)
+	}
+	return client
 }

@@ -11,6 +11,10 @@ services:
       - db
     volumes:
       - ./src:/app
+      # ADCファイルをマウント
+      - ~/.config/gcloud:/root/.config/gcloud:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
 
   db:
     image: postgres:15

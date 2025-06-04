@@ -1,5 +1,5 @@
-resource "google_storage_bucket" "example" {
-  name = "${var.project_id}-terraform-test-bucket"
+resource "google_storage_bucket" "cms" {
+  name = "${var.project_id}-cms-bucket"
   location = var.region
 }
 
@@ -29,6 +29,14 @@ resource "google_project_iam_member" "cloudsql_client" {
   role    = "roles/cloudsql.client"
   member  = "serviceAccount:${google_service_account.cloud_run.email}"
 }
+
+# Cloud Storageユーザー権限
+resource "google_project_iam_member" "cloud_storage_user" {
+  project = var.project_id
+  role    = "roles/storage.objectUser"
+  member  = "serviceAccount:${google_service_account.cloud_run.email}"
+}
+
 
 # ログ書き込み権限
 resource "google_project_iam_member" "log_writer" {

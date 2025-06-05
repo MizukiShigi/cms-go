@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"io"
+	"os"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
@@ -38,7 +39,12 @@ func NewCreateImageUsecase(imageRepository repository.ImageRepository, storageSe
 }
 
 func (u *CreateImageUsecase) Execute(ctx context.Context, input *CreateImageInput) (*CreateImageOutput, error) {
-	image := entity.NewImage(input.OriginalFilename, input.StoredFilename, input.ImageURL, input.PostID, input.UserID, input.SortOrder)
+	bucketName := os.Getenv("GCS_IMAGEWBUCKET_NAME")
+	uploadResult, err := u.storageService.UploadImage(ctx, bucketName, input.OriginalFilename, input.File)
+	if err != nil {
+		return nil, err
+	}
+	image := entity.NewImage(input.OriginalFilename, uploadResult.StoredFilename, uploadResult.URL, input.PostID, input.UserID, input.SortOrder)
 	err := u.imageRepository.Create(ctx, image)
 	if err != nil {
 		return nil, err

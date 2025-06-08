@@ -44,11 +44,13 @@ func (u *CreateImageUsecase) Execute(ctx context.Context, input *CreateImageInpu
 	if err != nil {
 		return nil, err
 	}
+
 	image := entity.NewImage(input.OriginalFilename, uploadResult.StoredFilename, uploadResult.URL, input.PostID, input.UserID, input.SortOrder)
-	err := u.imageRepository.Create(ctx, image)
+	err = u.imageRepository.Create(ctx, image)
 	if err != nil {
 		return nil, err
 	}
+
 	return &CreateImageOutput{
 		ID:               image.ID,
 		ImageURL:         image.GCSURL,

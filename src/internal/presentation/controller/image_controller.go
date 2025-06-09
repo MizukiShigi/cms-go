@@ -18,6 +18,16 @@ func NewImageController(createImageUsecase *usecase.CreateImageUsecase) *ImageCo
 	return &ImageController{createImageUsecase: createImageUsecase}
 }
 
+type CreateImageResponse struct {
+	ID               string `json:"id"`
+	ImageURL         string `json:"image_url"`
+	UserID           string `json:"user_id"`
+	PostID           string `json:"post_id"`
+	OriginalFilename string `json:"original_filename"`
+	StoredFilename   string `json:"stored_filename"`
+	SortOrder        int    `json:"sort_order"`
+}
+
 func (c *ImageController) CreateImage(w http.ResponseWriter, r *http.Request) {
 	ctxUserID, err := domaincontext.GetUserID(r.Context())
 	if err != nil {
@@ -96,5 +106,15 @@ func (c *ImageController) CreateImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helper.RespondWithJSON(w, http.StatusCreated, output)
+	response := CreateImageResponse{
+		ID:               output.ID.String(),
+		ImageURL:         output.ImageURL,
+		UserID:           output.UserID.String(),
+		PostID:           output.PostID.String(),
+		OriginalFilename: output.OriginalFilename.String(),
+		StoredFilename:   output.StoredFilename,
+		SortOrder:        output.SortOrder,
+	}
+
+	helper.RespondWithJSON(w, http.StatusCreated, response)
 }

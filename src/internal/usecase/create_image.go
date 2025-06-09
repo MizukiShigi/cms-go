@@ -39,7 +39,7 @@ func NewCreateImageUsecase(imageRepository repository.ImageRepository, storageSe
 }
 
 func (u *CreateImageUsecase) Execute(ctx context.Context, input *CreateImageInput) (*CreateImageOutput, error) {
-	bucketName := os.Getenv("GCS_IMAGEWBUCKET_NAME")
+	bucketName := os.Getenv("GCS_IMAGE_BUCKET_NAME")
 	uploadResult, err := u.storageService.UploadImage(ctx, bucketName, input.OriginalFilename, input.File)
 	if err != nil {
 		return nil, err

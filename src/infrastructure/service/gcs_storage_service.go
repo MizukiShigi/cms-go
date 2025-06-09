@@ -35,11 +35,11 @@ func (s *storageService) UploadImage(ctx context.Context, bucketName string, fil
 	writer.ContentType = detectImageContentType(path)
 
 	if _, err := io.Copy(writer, data); err != nil {
-		return domainservice.UploadResult{}, fmt.Errorf("failed to upload image to GCS: %w", err)
+		return domainservice.UploadResult{}, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to upload image to GCS")
 	}
 
 	if err := writer.Close(); err != nil {
-		return domainservice.UploadResult{}, fmt.Errorf("failed to complete image upload: %w", err)
+		return domainservice.UploadResult{}, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to complete image upload")
 	}
 
 	publicURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, path)

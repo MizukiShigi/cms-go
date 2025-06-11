@@ -16,7 +16,6 @@ import (
 )
 
 func TestCreateImageUsecase_Execute(t *testing.T) {
-	// テスト用の環境変数を設定
 	originalBucketName := os.Getenv("GCS_IMAGE_BUCKET_NAME")
 	defer os.Setenv("GCS_IMAGE_BUCKET_NAME", originalBucketName)
 	os.Setenv("GCS_IMAGE_BUCKET_NAME", "test-bucket")

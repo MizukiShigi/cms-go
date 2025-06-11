@@ -85,7 +85,7 @@ func (c *ImageController) CreateImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    file, err := header.Open()
+	file, err := header.Open()
 	if err != nil {
 		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Failed to open file"))
 		return
@@ -93,11 +93,11 @@ func (c *ImageController) CreateImage(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	input := &usecase.CreateImageInput{
-		UserID: userID,
-		PostID: postID,
-		File: file,
+		UserID:           userID,
+		PostID:           postID,
+		File:             file,
 		OriginalFilename: filename,
-		SortOrder: sortOrder,
+		SortOrder:        sortOrder,
 	}
 
 	output, err := c.createImageUsecase.Execute(r.Context(), input)

@@ -14,12 +14,14 @@ import (
 type AuthController struct {
 	registerUserUsecase *usecase.RegisterUserUsecase
 	loginUserUsecase    *usecase.LoginUserUsecase
+	validator           *validator.Validate
 }
 
 func NewAuthController(registerUserUsecase *usecase.RegisterUserUsecase, loginUserUsecase *usecase.LoginUserUsecase) *AuthController {
 	return &AuthController{
 		registerUserUsecase: registerUserUsecase,
 		loginUserUsecase:    loginUserUsecase,
+		validator:           validator.New(),
 	}
 }
 
@@ -53,8 +55,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validate := validator.New()
-	err := validate.Struct(req)
+	err := ac.validator.Struct(req)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
@@ -92,8 +93,7 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validate := validator.New()
-	err := validate.Struct(req)
+	err := ac.validator.Struct(req)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())

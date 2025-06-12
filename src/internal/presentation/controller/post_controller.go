@@ -19,6 +19,7 @@ type PostController struct {
 	getPostUsecase    *usecase.GetPostUsecase
 	updatePostUsecase *usecase.UpdatePostUsecase
 	patchPostUsecase  *usecase.PatchPostUsecase
+	validator         *validator.Validate
 }
 
 func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase, updatePostUsecase *usecase.UpdatePostUsecase, patchPostUsecase *usecase.PatchPostUsecase) *PostController {
@@ -27,6 +28,7 @@ func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsec
 		getPostUsecase:    getPostUsecase,
 		updatePostUsecase: updatePostUsecase,
 		patchPostUsecase:  patchPostUsecase,
+		validator:         validator.New(),
 	}
 }
 
@@ -65,8 +67,7 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validate := validator.New()
-	err = validate.Struct(req)
+	err = pc.validator.Struct(req)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
@@ -123,16 +124,16 @@ func (pc *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oiutputTags := []string{}
+	outputTags := []string{}
 	for _, tag := range output.Tags {
-		oiutputTags = append(oiutputTags, tag.String())
+		outputTags = append(outputTags, tag.String())
 	}
 
 	createPostResponse := CreatePostResponse{
 		ID:      output.ID.String(),
 		Title:   output.Title.String(),
 		Content: output.Content.String(),
-		Tags:    oiutputTags,
+		Tags:    outputTags,
 	}
 
 	helper.RespondWithJSON(w, http.StatusCreated, createPostResponse)
@@ -222,8 +223,7 @@ func (pc *PostController) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validate := validator.New()
-	err = validate.Struct(req)
+	err = pc.validator.Struct(req)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())
@@ -332,8 +332,7 @@ func (pc *PostController) PatchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validate := validator.New()
-	err = validate.Struct(req)
+	err = pc.validator.Struct(req)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			myError := valueobject.NewMyError(valueobject.InvalidCode, err.Error())

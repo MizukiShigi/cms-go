@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # CMSプロジェクト ドキュメント
 
 ## 原則
@@ -122,6 +126,39 @@ HTTPリクエストの処理とレスポンスの生成を担当します。
 - エラーメッセージの管理
 - 共通ユーティリティ関数
 
+### インフラストラクチャ層 (infrastructure)
+外部システムとの統合とデータアクセスを担当します。
+
+#### repository
+- ドメインリポジトリインターフェースの実装
+- SQLBoilerを使用したデータベースアクセス
+- トランザクション管理の実装
+
+#### service
+- 外部サービスとの統合（JWT生成、Google Cloud Storage等）
+- ドメインサービスインターフェースの実装
+
+#### logger
+- 構造化ログ（slog）の設定とハンドラー
+
+## 重要な実装パターン
+
+### 依存性注入
+- インターフェースによる依存関係の抽象化
+- テスト時のモック注入
+- 各層の独立性確保
+
+### エラーハンドリング
+- カスタムエラー型による分類（`internal/domain/valueobject/error.go`）
+- 適切なHTTPステータスコードへのマッピング
+- 日本語エラーメッセージの提供
+
+### 認証・認可フロー
+1. JWTトークンの生成（ログイン時）
+2. ミドルウェアでのトークン検証
+3. ユーザーコンテキストの設定
+4. 認証が必要なエンドポイントでの利用
+
 ## 主要な依存関係
 - Web Framework: `github.com/gorilla/mux`
 - データベース: PostgreSQL (`github.com/lib/pq`)
@@ -150,6 +187,64 @@ HTTPリクエストの処理とレスポンスの生成を担当します。
 - Air (ホットリロード)
 - Docker
 - SQLBoiler (ORM)
+
+## 開発コマンド
+
+### テスト実行
+```bash
+# 全テスト実行（SQLBoilerモデルのテストを除く）
+make test
+
+# 単一テスト実行
+cd src && go test ./internal/usecase/login_user_test.go
+cd src && go test ./internal/domain/entity/user_test.go
+
+# 特定パッケージのテスト
+cd src && go test ./internal/usecase/
+cd src && go test ./internal/domain/entity/
+```
+
+### コード品質
+```bash
+# コードフォーマット
+make fmt
+
+# コード静的解析
+make vet
+```
+
+### データベース
+```bash
+# SQLBoilerモデル生成（マイグレーション）
+make migration
+
+# PostgreSQL接続設定: sqlboiler.toml
+# デフォルト: host=localhost, port=5432, dbname=cms, user=postgres, pass=password
+```
+
+### アプリケーション実行
+```bash
+# APIサーバー起動
+cd src && go run cmd/api/main.go
+
+# Docker環境での実行
+docker-compose up
+```
+
+### Google Cloud Platform
+```bash
+# GCP認証
+make login
+
+# Terraform操作
+make plan    # 実行計画確認
+make apply   # インフラ適用
+make destroy # インフラ削除
+
+# Docker操作
+make docker-build  # イメージビルド
+make docker-push   # イメージプッシュ
+```
 
 ## デプロイメント
 - Dockerコンテナ化対応
@@ -233,8 +328,8 @@ src/
 - プレゼンテーション層: 70%以上
 
 ### テストデータ管理
-- テストデータは`testdata`ディレクトリで管理
-- フィクスチャを使用してテストデータを準備
+- テストデータは各テストファイル内で直接定義
+- フィクスチャは未導入（今後の課題）
 - テストデータは環境に依存しない形で管理
 
 ## パフォーマンス最適化
@@ -246,3 +341,9 @@ src/
 - エラーログの適切な記録
 - パフォーマンスメトリクスの収集
 - アクセスログの記録
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

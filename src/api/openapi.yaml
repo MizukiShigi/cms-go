@@ -1,0 +1,658 @@
+openapi: 3.0.3
+info:
+  title: CMS API
+  description: |
+    Go言語で構築されたCMS（Content Management System）のREST API仕様書。
+    
+    ## 認証について
+    このAPIは JWT (JSON Web Token) を使用した Bearer Token 認証を採用しています。
+    認証が必要なエンドポイントには、以下のヘッダーが必要です：
+    
+    ```
+    Authorization: Bearer <jwt-token>
+    ```
+    
+    ## エラーレスポンス
+    すべてのエラーレスポンスは以下の形式で返却されます：
+    
+    ```json
+    {
+      "error": "エラーメッセージ（日本語）"
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: CMS API サポート
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/cms/v1
+    description: 開発環境サーバー
+  - url: https://api.example.com/cms/v1
+    description: 本番環境サーバー
+
+tags:
+  - name: auth
+    description: 認証関連API
+  - name: posts
+    description: 投稿管理API
+  - name: images
+    description: 画像管理API
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: ユーザー登録
+      description: 新規ユーザーアカウントを作成します
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              name: "田中太郎"
+              email: "tanaka@example.com"
+              password: "password123"
+      responses:
+        '201':
+          description: ユーザー登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+              example:
+                id: "01234567-89ab-cdef-0123-456789abcdef"
+                name: "田中太郎"
+                email: "tanaka@example.com"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: メールアドレスが既に使用されています
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "メールアドレスが既に使用されています"
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: ユーザーログイン
+      description: メールアドレスとパスワードでログインし、JWTトークンを取得します
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "tanaka@example.com"
+              password: "password123"
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                user:
+                  id: "01234567-89ab-cdef-0123-456789abcdef"
+                  name: "田中太郎"
+                  email: "tanaka@example.com"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: 認証失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "メールアドレスまたはパスワードが間違っています"
+
+  /posts:
+    post:
+      tags:
+        - posts
+      summary: 投稿作成
+      description: 新しい投稿を作成します
+      operationId: createPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+            example:
+              title: "初めての投稿"
+              content: "これは私の初めての投稿です。"
+              tags: ["技術", "ブログ"]
+              status: "draft"
+      responses:
+        '201':
+          description: 投稿作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePostResponse'
+              example:
+                id: "01234567-89ab-cdef-0123-456789abcdef"
+                title: "初めての投稿"
+                content: "これは私の初めての投稿です。"
+                tags: ["技術", "ブログ"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /posts/{id}:
+    get:
+      tags:
+        - posts
+      summary: 投稿取得
+      description: 指定されたIDの投稿を取得します
+      operationId: getPost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 投稿ID
+          schema:
+            type: string
+            format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+      responses:
+        '200':
+          description: 投稿取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPostResponse'
+              example:
+                id: "01234567-89ab-cdef-0123-456789abcdef"
+                title: "初めての投稿"
+                content: "これは私の初めての投稿です。"
+                status: "published"
+                tags: ["技術", "ブログ"]
+                first_published_at: "2024-01-15T10:30:00Z"
+                content_updated_at: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - posts
+      summary: 投稿更新
+      description: 指定されたIDの投稿を完全に更新します
+      operationId: updatePost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 投稿ID
+          schema:
+            type: string
+            format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+            example:
+              title: "更新された投稿タイトル"
+              content: "更新された投稿内容です。"
+              tags: ["技術", "アップデート"]
+      responses:
+        '200':
+          description: 投稿更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatePostResponse'
+              example:
+                id: "01234567-89ab-cdef-0123-456789abcdef"
+                title: "更新された投稿タイトル"
+                content: "更新された投稿内容です。"
+                status: "published"
+                tags: ["技術", "アップデート"]
+                first_published_at: "2024-01-15T10:30:00Z"
+                content_updated_at: "2024-01-16T14:20:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - posts
+      summary: 投稿部分更新
+      description: 指定されたIDの投稿を部分的に更新します
+      operationId: patchPost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 投稿ID
+          schema:
+            type: string
+            format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchPostRequest'
+            example:
+              status: "published"
+      responses:
+        '200':
+          description: 投稿部分更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchPostResponse'
+              example:
+                id: "01234567-89ab-cdef-0123-456789abcdef"
+                title: "初めての投稿"
+                content: "これは私の初めての投稿です。"
+                status: "published"
+                tags: ["技術", "ブログ"]
+                first_published_at: "2024-01-16T14:20:00Z"
+                content_updated_at: "2024-01-16T14:20:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /images:
+    post:
+      tags:
+        - images
+      summary: 画像アップロード
+      description: 投稿に関連する画像をアップロードします
+      operationId: createImage
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - post_id
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: アップロードする画像ファイル（最大10MB）
+                post_id:
+                  type: string
+                  format: uuid
+                  description: 画像を関連付ける投稿ID
+                  example: "01234567-89ab-cdef-0123-456789abcdef"
+                sort_order:
+                  type: integer
+                  minimum: 0
+                  maximum: 999
+                  description: 画像の表示順序（0-999）
+                  example: 1
+            encoding:
+              image:
+                contentType: image/jpeg, image/png, image/gif, image/webp
+      responses:
+        '201':
+          description: 画像アップロード成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateImageResponse'
+              example:
+                id: "01234567-89ab-cdef-0123-456789abcdef"
+                image_url: "https://storage.googleapis.com/bucket/images/stored_filename.jpg"
+                user_id: "01234567-89ab-cdef-0123-456789abcdef"
+                post_id: "01234567-89ab-cdef-0123-456789abcdef"
+                original_filename: "sample.jpg"
+                stored_filename: "20240116_142000_sample.jpg"
+                sort_order: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: ファイルサイズが大きすぎます
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "ファイルサイズが上限を超えています"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: ユーザー名
+          example: "田中太郎"
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+          example: "tanaka@example.com"
+        password:
+          type: string
+          minLength: 8
+          description: パスワード（8文字以上）
+          example: "password123"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+          example: "tanaka@example.com"
+        password:
+          type: string
+          description: パスワード
+          example: "password123"
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ユーザーID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        name:
+          type: string
+          description: ユーザー名
+          example: "田中太郎"
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+          example: "tanaka@example.com"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWTトークン
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    CreatePostRequest:
+      type: object
+      required:
+        - title
+        - content
+        - status
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: 投稿タイトル
+          example: "初めての投稿"
+        content:
+          type: string
+          minLength: 1
+          description: 投稿内容
+          example: "これは私の初めての投稿です。"
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: タグリスト（最大10個）
+          example: ["技術", "ブログ"]
+        status:
+          type: string
+          enum: [draft, published]
+          description: 投稿ステータス
+          example: "draft"
+
+    CreatePostResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 投稿ID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        title:
+          type: string
+          description: 投稿タイトル
+          example: "初めての投稿"
+        content:
+          type: string
+          description: 投稿内容
+          example: "これは私の初めての投稿です。"
+        tags:
+          type: array
+          items:
+            type: string
+          description: タグリスト
+          example: ["技術", "ブログ"]
+
+    GetPostResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 投稿ID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        title:
+          type: string
+          description: 投稿タイトル
+          example: "初めての投稿"
+        content:
+          type: string
+          description: 投稿内容
+          example: "これは私の初めての投稿です。"
+        status:
+          type: string
+          enum: [draft, published, private, deleted]
+          description: 投稿ステータス
+          example: "published"
+        tags:
+          type: array
+          items:
+            type: string
+          description: タグリスト
+          example: ["技術", "ブログ"]
+        first_published_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: 初回公開日時
+          example: "2024-01-15T10:30:00Z"
+        content_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: コンテンツ更新日時
+          example: "2024-01-15T10:30:00Z"
+
+    UpdatePostRequest:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: 投稿タイトル
+          example: "更新された投稿タイトル"
+        content:
+          type: string
+          minLength: 1
+          description: 投稿内容
+          example: "更新された投稿内容です。"
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: タグリスト（最大10個）
+          example: ["技術", "アップデート"]
+
+    UpdatePostResponse:
+      $ref: '#/components/schemas/GetPostResponse'
+
+    PatchPostRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: 投稿タイトル
+          example: "部分更新されたタイトル"
+        content:
+          type: string
+          minLength: 1
+          description: 投稿内容
+          example: "部分更新された内容です。"
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: タグリスト（最大10個）
+          example: ["技術", "部分更新"]
+        status:
+          type: string
+          enum: [draft, published, private, deleted]
+          description: 投稿ステータス
+          example: "published"
+
+    PatchPostResponse:
+      $ref: '#/components/schemas/GetPostResponse'
+
+    CreateImageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 画像ID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        image_url:
+          type: string
+          format: uri
+          description: 画像のURL
+          example: "https://storage.googleapis.com/bucket/images/stored_filename.jpg"
+        user_id:
+          type: string
+          format: uuid
+          description: ユーザーID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        post_id:
+          type: string
+          format: uuid
+          description: 投稿ID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        original_filename:
+          type: string
+          description: 元のファイル名
+          example: "sample.jpg"
+        stored_filename:
+          type: string
+          description: 保存されたファイル名
+          example: "20240116_142000_sample.jpg"
+        sort_order:
+          type: integer
+          description: 表示順序
+          example: 1
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: エラーメッセージ（日本語）
+          example: "リクエストが無効です"
+
+  responses:
+    BadRequest:
+      description: リクエストが無効です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "リクエストが無効です"
+
+    Unauthorized:
+      description: 認証が必要です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "認証が必要です"
+
+    NotFound:
+      description: リソースが見つかりません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "投稿が見つかりません"
+
+    InternalServerError:
+      description: サーバー内部エラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "サーバー内部エラーが発生しました"

@@ -342,6 +342,10 @@ src/
 - パフォーマンスメトリクスの収集
 - アクセスログの記録
 
+## 利用可能なコマンド
+- `/project:list-issue` - issueをリストで取得
+- `/project:fix-issue` - issueを解決
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.

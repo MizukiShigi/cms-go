@@ -3,18 +3,18 @@ info:
   title: CMS API
   description: |
     Go言語で構築されたCMS（Content Management System）のREST API仕様書。
-    
+
     ## 認証について
     このAPIは JWT (JSON Web Token) を使用した Bearer Token 認証を採用しています。
     認証が必要なエンドポイントには、以下のヘッダーが必要です：
-    
+
     ```
     Authorization: Bearer <jwt-token>
     ```
-    
+
     ## エラーレスポンス
     すべてのエラーレスポンスは以下の形式で返却されます：
-    
+
     ```json
     {
       "error": "エラーメッセージ（日本語）"
@@ -56,30 +56,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: "#/components/schemas/RegisterRequest"
             example:
               name: "田中太郎"
               email: "tanaka@example.com"
               password: "password123"
       responses:
-        '201':
+        "201":
           description: ユーザー登録成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: "#/components/schemas/UserResponse"
               example:
                 id: "01234567-89ab-cdef-0123-456789abcdef"
                 name: "田中太郎"
                 email: "tanaka@example.com"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
           description: メールアドレスが既に使用されています
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               example:
                 error: "メールアドレスが既に使用されています"
 
@@ -96,31 +96,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
             example:
               email: "tanaka@example.com"
               password: "password123"
       responses:
-        '200':
+        "200":
           description: ログイン成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: "#/components/schemas/LoginResponse"
               example:
                 token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                 user:
                   id: "01234567-89ab-cdef-0123-456789abcdef"
                   name: "田中太郎"
                   email: "tanaka@example.com"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
           description: 認証失敗
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               example:
                 error: "メールアドレスまたはパスワードが間違っています"
 
@@ -136,28 +136,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreatePostRequest'
+              $ref: "#/components/schemas/CreatePostRequest"
             example:
               title: "初めての投稿"
               content: "これは私の初めての投稿です。"
               tags: ["技術", "ブログ"]
               status: "draft"
       responses:
-        '201':
+        "201":
           description: 投稿作成成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreatePostResponse'
+                $ref: "#/components/schemas/CreatePostResponse"
               example:
                 id: "01234567-89ab-cdef-0123-456789abcdef"
                 title: "初めての投稿"
                 content: "これは私の初めての投稿です。"
                 tags: ["技術", "ブログ"]
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /posts/{id}:
     get:
@@ -176,12 +176,12 @@ paths:
             format: uuid
           example: "01234567-89ab-cdef-0123-456789abcdef"
       responses:
-        '200':
+        "200":
           description: 投稿取得成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetPostResponse'
+                $ref: "#/components/schemas/GetPostResponse"
               example:
                 id: "01234567-89ab-cdef-0123-456789abcdef"
                 title: "初めての投稿"
@@ -190,12 +190,12 @@ paths:
                 tags: ["技術", "ブログ"]
                 first_published_at: "2024-01-15T10:30:00Z"
                 content_updated_at: "2024-01-15T10:30:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     put:
       tags:
@@ -217,18 +217,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdatePostRequest'
+              $ref: "#/components/schemas/UpdatePostRequest"
             example:
               title: "更新された投稿タイトル"
               content: "更新された投稿内容です。"
               tags: ["技術", "アップデート"]
       responses:
-        '200':
+        "200":
           description: 投稿更新成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdatePostResponse'
+                $ref: "#/components/schemas/UpdatePostResponse"
               example:
                 id: "01234567-89ab-cdef-0123-456789abcdef"
                 title: "更新された投稿タイトル"
@@ -237,12 +237,12 @@ paths:
                 tags: ["技術", "アップデート"]
                 first_published_at: "2024-01-15T10:30:00Z"
                 content_updated_at: "2024-01-16T14:20:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
     patch:
       tags:
@@ -264,16 +264,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchPostRequest'
+              $ref: "#/components/schemas/PatchPostRequest"
             example:
               status: "published"
       responses:
-        '200':
+        "200":
           description: 投稿部分更新成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PatchPostResponse'
+                $ref: "#/components/schemas/PatchPostResponse"
               example:
                 id: "01234567-89ab-cdef-0123-456789abcdef"
                 title: "初めての投稿"
@@ -282,12 +282,12 @@ paths:
                 tags: ["技術", "ブログ"]
                 first_published_at: "2024-01-16T14:20:00Z"
                 content_updated_at: "2024-01-16T14:20:00Z"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /images:
     post:
@@ -325,12 +325,12 @@ paths:
               image:
                 contentType: image/jpeg, image/png, image/gif, image/webp
       responses:
-        '201':
+        "201":
           description: 画像アップロード成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateImageResponse'
+                $ref: "#/components/schemas/CreateImageResponse"
               example:
                 id: "01234567-89ab-cdef-0123-456789abcdef"
                 image_url: "https://storage.googleapis.com/bucket/images/stored_filename.jpg"
@@ -339,16 +339,16 @@ paths:
                 original_filename: "sample.jpg"
                 stored_filename: "20240116_142000_sample.jpg"
                 sort_order: 1
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '413':
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
           description: ファイルサイズが大きすぎます
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               example:
                 error: "ファイルサイズが上限を超えています"
 
@@ -425,7 +425,7 @@ components:
           description: JWTトークン
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         user:
-          $ref: '#/components/schemas/UserResponse'
+          $ref: "#/components/schemas/UserResponse"
 
     CreatePostRequest:
       type: object
@@ -545,7 +545,7 @@ components:
           example: ["技術", "アップデート"]
 
     UpdatePostResponse:
-      $ref: '#/components/schemas/GetPostResponse'
+      $ref: "#/components/schemas/GetPostResponse"
 
     PatchPostRequest:
       type: object
@@ -574,7 +574,7 @@ components:
           example: "published"
 
     PatchPostResponse:
-      $ref: '#/components/schemas/GetPostResponse'
+      $ref: "#/components/schemas/GetPostResponse"
 
     CreateImageResponse:
       type: object
@@ -626,7 +626,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: "リクエストが無効です"
 
@@ -635,7 +635,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: "認証が必要です"
 
@@ -644,7 +644,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: "投稿が見つかりません"
 
@@ -653,6 +653,6 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: "サーバー内部エラーが発生しました"

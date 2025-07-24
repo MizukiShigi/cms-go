@@ -38,12 +38,11 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 
 		// モックの設定
 		mockPostRepo.EXPECT().
-			List(gomock.Any(), userID, gomock.Any()).
+			List(gomock.Any(), gomock.Any()).
 			Return(posts, totalCount, nil)
 
 		// リクエスト作成
 		req := &ListPostsRequest{
-			UserID: userID,
 			Limit:  "20",
 			Offset: "0",
 			Sort:   "created_at_desc",
@@ -74,7 +73,6 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 	t.Run("ページネーションが正しく動作する", func(t *testing.T) {
 		usecase := NewListPostsUsecase(mockPostRepo)
 
-		userID := valueobject.NewUserID()
 		posts := []*entity.Post{}
 		totalCount := 50
 
@@ -87,12 +85,11 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 		}
 
 		mockPostRepo.EXPECT().
-			List(gomock.Any(), userID, expectedOptions).
+			List(gomock.Any(), expectedOptions).
 			Return(posts, totalCount, nil)
 
 		// リクエスト作成
 		req := &ListPostsRequest{
-			UserID: userID,
 			Limit:  "10",
 			Offset: "20",
 		}
@@ -111,7 +108,6 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 	t.Run("ステータスフィルタが正しく動作する", func(t *testing.T) {
 		usecase := NewListPostsUsecase(mockPostRepo)
 
-		userID := valueobject.NewUserID()
 		posts := []*entity.Post{}
 		totalCount := 10
 
@@ -125,12 +121,11 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 		}
 
 		mockPostRepo.EXPECT().
-			List(gomock.Any(), userID, expectedOptions).
+			List(gomock.Any(), expectedOptions).
 			Return(posts, totalCount, nil)
 
 		// リクエスト作成
 		req := &ListPostsRequest{
-			UserID: userID,
 			Status: "published",
 		}
 
@@ -145,7 +140,6 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 	t.Run("ソート設定が正しく動作する", func(t *testing.T) {
 		usecase := NewListPostsUsecase(mockPostRepo)
 
-		userID := valueobject.NewUserID()
 		posts := []*entity.Post{}
 		totalCount := 5
 
@@ -158,12 +152,11 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 		}
 
 		mockPostRepo.EXPECT().
-			List(gomock.Any(), userID, expectedOptions).
+			List(gomock.Any(), expectedOptions).
 			Return(posts, totalCount, nil)
 
 		// リクエスト作成
 		req := &ListPostsRequest{
-			UserID: userID,
 			Sort:   "updated_at_asc",
 		}
 
@@ -178,7 +171,6 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 	t.Run("無効なパラメータがデフォルト値で処理される", func(t *testing.T) {
 		usecase := NewListPostsUsecase(mockPostRepo)
 
-		userID := valueobject.NewUserID()
 		posts := []*entity.Post{}
 		totalCount := 0
 
@@ -191,12 +183,11 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 		}
 
 		mockPostRepo.EXPECT().
-			List(gomock.Any(), userID, expectedOptions).
+			List(gomock.Any(), expectedOptions).
 			Return(posts, totalCount, nil)
 
 		// リクエスト作成（無効な値を設定）
 		req := &ListPostsRequest{
-			UserID: userID,
 			Limit:  "invalid",
 			Offset: "-10",
 			Status: "invalid_status",
@@ -215,18 +206,15 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 	t.Run("リポジトリエラーが適切に処理される", func(t *testing.T) {
 		usecase := NewListPostsUsecase(mockPostRepo)
 
-		userID := valueobject.NewUserID()
 		expectedError := valueobject.NewMyError(valueobject.InternalServerErrorCode, "Database error")
 
 		// モックの設定（エラーを返す）
 		mockPostRepo.EXPECT().
-			List(gomock.Any(), userID, gomock.Any()).
+			List(gomock.Any(), gomock.Any()).
 			Return(nil, 0, expectedError)
 
 		// リクエスト作成
-		req := &ListPostsRequest{
-			UserID: userID,
-		}
+		req := &ListPostsRequest{}
 
 		// 実行
 		result, err := usecase.Execute(context.Background(), req)

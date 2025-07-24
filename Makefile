@@ -45,3 +45,22 @@ vet:
 # DBマイグレーション
 migration:
 	cd src && sqlboiler psql
+
+# モック生成
+# 使用例: make mock-repo REPO=post_repository
+mock-repo:
+	@if [ -z "$(REPO)" ]; then \
+		echo "使用例: make mock-repo REPO=post_repository"; \
+		exit 1; \
+	fi
+	cd src && go run go.uber.org/mock/mockgen@latest -source=internal/domain/repository/$(REPO).go -destination=mocks/repository/mock_$(REPO).go -package=repository
+
+mock-all:
+	cd src && go run go.uber.org/mock/mockgen@latest -source=internal/domain/repository/post_repository.go -destination=mocks/repository/mock_post_repository.go -package=repository
+	cd src && go run go.uber.org/mock/mockgen@latest -source=internal/domain/repository/user_repository.go -destination=mocks/repository/mock_user_repository.go -package=repository
+	cd src && go run go.uber.org/mock/mockgen@latest -source=internal/domain/repository/tag_repository.go -destination=mocks/repository/mock_tag_repository.go -package=repository
+	cd src && go run go.uber.org/mock/mockgen@latest -source=internal/domain/repository/transaction_manager.go -destination=mocks/repository/mock_transaction_manager.go -package=repository
+	cd src && go run go.uber.org/mock/mockgen@latest -source=internal/domain/repository/image_repository.go -destination=mocks/repository/mock_image_repository.go -package=repository
+
+# 下位互換のため
+mock: mock-all

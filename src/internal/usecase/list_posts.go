@@ -21,7 +21,6 @@ func NewListPostsUsecase(postRepository repository.PostRepository) *ListPostsUse
 
 // ListPostsRequest は投稿一覧取得のリクエスト
 type ListPostsRequest struct {
-	UserID valueobject.UserID
 	Limit  string
 	Offset string
 	Status string
@@ -93,7 +92,7 @@ func (u *ListPostsUsecase) Execute(ctx context.Context, req *ListPostsRequest) (
 	}
 
 	// 投稿一覧取得
-	posts, total, err := u.postRepository.List(ctx, req.UserID, options)
+	posts, total, err := u.postRepository.List(ctx, options)
 	if err != nil {
 		return nil, err
 	}

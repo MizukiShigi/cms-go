@@ -118,21 +118,18 @@ func (r *PostRepository) SetTags(ctx context.Context, post *entity.Post, tags []
 	return nil
 }
 
-func (r *PostRepository) List(ctx context.Context, userID valueobject.UserID, options *repository.ListPostsOptions) ([]*entity.Post, int, error) {
+func (r *PostRepository) List(ctx context.Context, options *repository.ListPostsOptions) ([]*entity.Post, int, error) {
 	// カウントクエリ
-	countQuery := models.Posts(
-		models.PostWhere.UserID.EQ(userID.String()),
-	)
+	query := models.Posts()
 	
 	// ステータスフィルタ
 	if options.Status != nil {
-		countQuery = models.Posts(
-			models.PostWhere.UserID.EQ(userID.String()),
+		query = models.Posts(
 			models.PostWhere.Status.EQ(options.Status.String()),
 		)
 	}
 	
-	totalCount, err := countQuery.Count(ctx, r.db)
+	totalCount, err := query.Count(ctx, r.db)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to count posts", "error", err)
 		return nil, 0, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to count posts")
@@ -140,7 +137,6 @@ func (r *PostRepository) List(ctx context.Context, userID valueobject.UserID, op
 
 	// データ取得クエリ構築
 	var queryMods []qm.QueryMod
-	queryMods = append(queryMods, models.PostWhere.UserID.EQ(userID.String()))
 	
 	// ステータスフィルタ
 	if options.Status != nil {

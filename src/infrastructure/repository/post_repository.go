@@ -9,6 +9,7 @@ import (
 	"github.com/MizukiShigi/cms-go/infrastructure/db/sqlboiler/models"
 	domaincontext "github.com/MizukiShigi/cms-go/internal/domain/context"
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
+	"github.com/MizukiShigi/cms-go/internal/domain/repository"
 	"github.com/MizukiShigi/cms-go/internal/domain/valueobject"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -63,63 +64,7 @@ func (r *PostRepository) Get(ctx context.Context, id valueobject.PostID) (*entit
 		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, errMsg)
 	}
 
-	voPostID, err := valueobject.ParsePostID(dbPost.ID)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post ID")
-	}
-
-	voUserID, err := valueobject.ParseUserID(dbPost.UserID)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid user ID")
-	}
-
-	voTitle, err := valueobject.NewPostTitle(dbPost.Title)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post title")
-	}
-
-	voContent, err := valueobject.NewPostContent(dbPost.Content)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post content")
-	}
-
-	voStatus, err := valueobject.NewPostStatus(dbPost.Status)
-	if err != nil {
-		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post status")
-	}
-
-	firstPublishedAt := &dbPost.FirstPublishedAt.Time
-	if !dbPost.FirstPublishedAt.Valid {
-		firstPublishedAt = nil
-	}
-
-	contentUpdatedAt := &dbPost.ContentUpdatedAt.Time
-	if !dbPost.ContentUpdatedAt.Valid {
-		contentUpdatedAt = nil
-	}
-
-	var voTags []valueobject.TagName
-	if dbPost.R != nil && dbPost.R.Tags != nil {
-		voTags = make([]valueobject.TagName, 0, len(dbPost.R.Tags))
-		for _, tag := range dbPost.R.Tags {
-			voTags = append(voTags, valueobject.TagName(tag.Name))
-		}
-	}
-
-	post := entity.ParsePost(
-		voPostID,
-		voTitle,
-		voContent,
-		voUserID,
-		voStatus,
-		dbPost.CreatedAt,
-		dbPost.UpdatedAt,
-		firstPublishedAt,
-		contentUpdatedAt,
-		voTags,
-	)
-
-	return post, nil
+	return r.convertToEntity(dbPost)
 }
 
 func (r *PostRepository) Update(ctx context.Context, post *entity.Post) error {
@@ -171,4 +116,134 @@ func (r *PostRepository) SetTags(ctx context.Context, post *entity.Post, tags []
 	}
 
 	return nil
+}
+
+func (r *PostRepository) List(ctx context.Context, userID valueobject.UserID, options *repository.ListPostsOptions) ([]*entity.Post, int, error) {
+	// カウントクエリ
+	countQuery := models.Posts(
+		models.PostWhere.UserID.EQ(userID.String()),
+	)
+	
+	// ステータスフィルタ
+	if options.Status != nil {
+		countQuery = models.Posts(
+			models.PostWhere.UserID.EQ(userID.String()),
+			models.PostWhere.Status.EQ(options.Status.String()),
+		)
+	}
+	
+	totalCount, err := countQuery.Count(ctx, r.db)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to count posts", "error", err)
+		return nil, 0, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to count posts")
+	}
+
+	// データ取得クエリ構築
+	var queryMods []qm.QueryMod
+	queryMods = append(queryMods, models.PostWhere.UserID.EQ(userID.String()))
+	
+	// ステータスフィルタ
+	if options.Status != nil {
+		queryMods = append(queryMods, models.PostWhere.Status.EQ(options.Status.String()))
+	}
+	
+	queryMods = append(queryMods,
+		qm.Load(models.PostRels.Tags),
+		qm.Limit(options.Limit),
+		qm.Offset(options.Offset),
+	)
+	
+	// ソート順設定
+	switch options.Sort {
+	case "created_at_asc":
+		queryMods = append(queryMods, qm.OrderBy("created_at ASC"))
+	case "updated_at_desc":
+		queryMods = append(queryMods, qm.OrderBy("updated_at DESC"))
+	case "updated_at_asc":
+		queryMods = append(queryMods, qm.OrderBy("updated_at ASC"))
+	default: // created_at_desc
+		queryMods = append(queryMods, qm.OrderBy("created_at DESC"))
+	}
+
+	dbPosts, err := models.Posts(queryMods...).All(ctx, r.db)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to get posts", "error", err)
+		return nil, 0, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to get posts")
+	}
+
+	posts := make([]*entity.Post, 0, len(dbPosts))
+	for _, dbPost := range dbPosts {
+		post, err := r.convertToEntity(dbPost)
+		if err != nil {
+			return nil, 0, err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, int(totalCount), nil
+}
+
+func (r *PostRepository) convertToEntity(dbPost *models.Post) (*entity.Post, error) {
+	voPostID, err := valueobject.ParsePostID(dbPost.ID)
+	if err != nil {
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post ID")
+	}
+
+	voUserID, err := valueobject.ParseUserID(dbPost.UserID)
+	if err != nil {
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid user ID")
+	}
+
+	voTitle, err := valueobject.NewPostTitle(dbPost.Title)
+	if err != nil {
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post title")
+	}
+
+	voContent, err := valueobject.NewPostContent(dbPost.Content)
+	if err != nil {
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post content")
+	}
+
+	voStatus, err := valueobject.NewPostStatus(dbPost.Status)
+	if err != nil {
+		return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid post status")
+	}
+
+	// タグを変換
+	var tags []valueobject.TagName
+	if dbPost.R != nil && dbPost.R.Tags != nil {
+		tags = make([]valueobject.TagName, 0, len(dbPost.R.Tags))
+		for _, dbTag := range dbPost.R.Tags {
+			voTagName, err := valueobject.NewTagName(dbTag.Name)
+			if err != nil {
+				return nil, valueobject.NewMyError(valueobject.InternalServerErrorCode, "Invalid tag name")
+			}
+			tags = append(tags, voTagName)
+		}
+	}
+
+	var firstPublishedAt *time.Time
+	if dbPost.FirstPublishedAt.Valid {
+		firstPublishedAt = &dbPost.FirstPublishedAt.Time
+	}
+
+	var contentUpdatedAt *time.Time
+	if dbPost.ContentUpdatedAt.Valid {
+		contentUpdatedAt = &dbPost.ContentUpdatedAt.Time
+	}
+
+	post := entity.ParsePost(
+		voPostID,
+		voTitle,
+		voContent,
+		voUserID,
+		voStatus,
+		dbPost.CreatedAt,
+		dbPost.UpdatedAt,
+		firstPublishedAt,
+		contentUpdatedAt,
+		tags,
+	)
+
+	return post, nil
 }

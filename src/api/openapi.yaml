@@ -125,6 +125,76 @@ paths:
                 error: "メールアドレスまたはパスワードが間違っています"
 
   /posts:
+    get:
+      tags:
+        - posts
+      summary: 投稿一覧取得
+      description: ユーザーの投稿一覧を取得します（ページネーション対応）
+      operationId: listPosts
+      parameters:
+        - name: limit
+          in: query
+          description: 取得件数（最大100件）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: offset
+          in: query
+          description: 取得開始位置
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+        - name: status
+          in: query
+          description: 投稿ステータスでフィルタ
+          schema:
+            type: string
+            enum: [draft, published, private, deleted]
+          example: "published"
+        - name: sort
+          in: query
+          description: ソート順
+          schema:
+            type: string
+            enum: [created_at_desc, created_at_asc, updated_at_desc, updated_at_asc]
+            default: created_at_desc
+          example: "created_at_desc"
+      responses:
+        "200":
+          description: 投稿一覧取得成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListPostsResponse"
+              example:
+                posts:
+                  - id: "01234567-89ab-cdef-0123-456789abcdef"
+                    title: "初めての投稿"
+                    status: "published"
+                    tags: ["技術", "ブログ"]
+                    first_published_at: "2024-01-15T10:30:00Z"
+                    content_updated_at: "2024-01-15T10:30:00Z"
+                  - id: "01234567-89ab-cdef-0123-456789abcdeg"
+                    title: "二番目の投稿"
+                    status: "draft"
+                    tags: ["日記"]
+                    first_published_at: null
+                    content_updated_at: "2024-01-16T14:20:00Z"
+                meta:
+                  total: 25
+                  limit: 20
+                  offset: 0
+                  has_next: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
     post:
       tags:
         - posts
@@ -519,6 +589,74 @@ components:
           nullable: true
           description: コンテンツ更新日時
           example: "2024-01-15T10:30:00Z"
+
+    ListPostsResponse:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostSummary"
+          description: 投稿一覧
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+          description: ページネーション情報
+
+    PostSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 投稿ID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        title:
+          type: string
+          description: 投稿タイトル
+          example: "初めての投稿"
+        status:
+          type: string
+          enum: [draft, published, private, deleted]
+          description: 投稿ステータス
+          example: "published"
+        tags:
+          type: array
+          items:
+            type: string
+          description: タグリスト
+          example: ["技術", "ブログ"]
+        first_published_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: 初回公開日時
+          example: "2024-01-15T10:30:00Z"
+        content_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: コンテンツ更新日時
+          example: "2024-01-15T10:30:00Z"
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: 総件数
+          example: 25
+        limit:
+          type: integer
+          description: 取得件数
+          example: 20
+        offset:
+          type: integer
+          description: 取得開始位置
+          example: 0
+        has_next:
+          type: boolean
+          description: 次のページがあるかどうか
+          example: true
 
     UpdatePostRequest:
       type: object

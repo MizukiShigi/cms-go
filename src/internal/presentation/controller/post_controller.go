@@ -15,14 +15,16 @@ import (
 )
 
 type PostController struct {
+	listPostsUsecase  *usecase.ListPostsUsecase
 	createPostUsecase *usecase.CreatePostUsecase
 	getPostUsecase    *usecase.GetPostUsecase
 	updatePostUsecase *usecase.UpdatePostUsecase
 	patchPostUsecase  *usecase.PatchPostUsecase
 }
 
-func NewPostController(createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase, updatePostUsecase *usecase.UpdatePostUsecase, patchPostUsecase *usecase.PatchPostUsecase) *PostController {
+func NewPostController(listPostsUsecase *usecase.ListPostsUsecase, createPostUsecase *usecase.CreatePostUsecase, getPostUsecase *usecase.GetPostUsecase, updatePostUsecase *usecase.UpdatePostUsecase, patchPostUsecase *usecase.PatchPostUsecase) *PostController {
 	return &PostController{
+		listPostsUsecase:  listPostsUsecase,
 		createPostUsecase: createPostUsecase,
 		getPostUsecase:    getPostUsecase,
 		updatePostUsecase: updatePostUsecase,
@@ -424,4 +426,39 @@ func (pc *PostController) PatchPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helper.RespondWithJSON(w, http.StatusOK, res)
+}
+
+func (pc *PostController) ListPosts(w http.ResponseWriter, r *http.Request) {
+	// ユーザーIDをコンテキストから取得
+	userIDValue := r.Context().Value(domaincontext.UserID)
+	userIDStr, ok := userIDValue.(string)
+	if !ok {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.UnauthorizedCode, "User not authenticated"))
+		return
+	}
+
+	userID, err := valueobject.ParseUserID(userIDStr)
+	if err != nil {
+		helper.RespondWithError(w, valueobject.NewMyError(valueobject.InvalidCode, "Invalid user ID"))
+		return
+	}
+
+	// クエリパラメータを取得
+	query := r.URL.Query()
+	req := &usecase.ListPostsRequest{
+		UserID: userID,
+		Limit:  query.Get("limit"),
+		Offset: query.Get("offset"),
+		Status: query.Get("status"),
+		Sort:   query.Get("sort"),
+	}
+
+	// ユースケース実行
+	response, err := pc.listPostsUsecase.Execute(r.Context(), req)
+	if err != nil {
+		helper.RespondWithError(w, err)
+		return
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, response)
 }

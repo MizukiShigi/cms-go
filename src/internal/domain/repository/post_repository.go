@@ -12,4 +12,13 @@ type PostRepository interface {
 	Get(ctx context.Context, id valueobject.PostID) (*entity.Post, error)
 	Update(ctx context.Context, post *entity.Post) error
 	SetTags(ctx context.Context, post *entity.Post, tags []*entity.Tag) error
+	List(ctx context.Context, userID valueobject.UserID, options *ListPostsOptions) ([]*entity.Post, int, error)
+}
+
+// ListPostsOptions は投稿一覧取得のオプション
+type ListPostsOptions struct {
+	Limit  int
+	Offset int
+	Status *valueobject.PostStatus
+	Sort   string
 }

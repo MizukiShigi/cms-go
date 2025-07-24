@@ -98,6 +98,7 @@ func main() {
 	// ユースケース初期化
 	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
 	loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
+	listPostsUsecase := usecase.NewListPostsUsecase(postRepository)
 	createPostUsecase := usecase.NewCreatePostUsecase(transactionManager, postRepository, tagRepository)
 	getPostUsecase := usecase.NewGetPostUsecase(postRepository)
 	updatePostUsecase := usecase.NewUpdatePostUsecase(transactionManager, postRepository, tagRepository)
@@ -106,12 +107,13 @@ func main() {
 
 	// コントローラー初期化
 	authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
-	postController := controller.NewPostController(createPostUsecase, getPostUsecase, updatePostUsecase, patchPostUsecase)
+	postController := controller.NewPostController(listPostsUsecase, createPostUsecase, getPostUsecase, updatePostUsecase, patchPostUsecase)
 	imageController := controller.NewImageController(createImageUsecase)
 	// ルーティング設定
 	r := mux.NewRouter()
 
 	// 全てのリクエストにミドルウェア設定
+	r.Use(middleware.CORSMiddleware)
 	r.Use(middleware.LoggingMiddleware)
 	r.Use(middleware.TimeoutMiddleware)
 
@@ -123,8 +125,8 @@ func main() {
 
 	// 認証
 	authRouter := publicV1Router.PathPrefix("/auth").Subrouter()
-	authRouter.HandleFunc("/register", authController.Register).Methods("POST")
-	authRouter.HandleFunc("/login", authController.Login).Methods("POST")
+	authRouter.HandleFunc("/register", authController.Register).Methods("POST", "OPTIONS")
+	authRouter.HandleFunc("/login", authController.Login).Methods("POST", "OPTIONS")
 
 	// 認証必須パス
 	protectedV1Router := v1Router.PathPrefix("/").Subrouter()
@@ -132,14 +134,15 @@ func main() {
 
 	// 投稿
 	postRouter := protectedV1Router.PathPrefix("/posts").Subrouter()
-	postRouter.HandleFunc("", postController.CreatePost).Methods("POST")
-	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET")
-	postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT")
-	postRouter.HandleFunc("/{id}", postController.PatchPost).Methods("PATCH")
+	postRouter.HandleFunc("", postController.ListPosts).Methods("GET", "OPTIONS")
+	postRouter.HandleFunc("", postController.CreatePost).Methods("POST", "OPTIONS")
+	postRouter.HandleFunc("/{id}", postController.GetPost).Methods("GET", "OPTIONS")
+	postRouter.HandleFunc("/{id}", postController.UpdatePost).Methods("PUT", "OPTIONS")
+	postRouter.HandleFunc("/{id}", postController.PatchPost).Methods("PATCH", "OPTIONS")
 
 	// 画像
 	imageRouter := protectedV1Router.PathPrefix("/images").Subrouter()
-	imageRouter.HandleFunc("", imageController.CreateImage).Methods("POST")
+	imageRouter.HandleFunc("", imageController.CreateImage).Methods("POST", "OPTIONS")
 	// imageRouter.HandleFunc("/{id}", imageController.GetImage).Methods("GET")
 	// imageRouter.HandleFunc("/{id}", imageController.UpdateImage).Methods("DELETE")
 

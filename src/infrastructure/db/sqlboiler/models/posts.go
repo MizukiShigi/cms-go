@@ -29,10 +29,10 @@ type Post struct {
 	Content          string    `boil:"content" json:"content" toml:"content" yaml:"content"`
 	UserID           string    `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	Status           string    `boil:"status" json:"status" toml:"status" yaml:"status"`
-	CreatedAt        time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt        time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	FirstPublishedAt null.Time `boil:"first_published_at" json:"first_published_at,omitempty" toml:"first_published_at" yaml:"first_published_at,omitempty"`
 	ContentUpdatedAt null.Time `boil:"content_updated_at" json:"content_updated_at,omitempty" toml:"content_updated_at" yaml:"content_updated_at,omitempty"`
+	CreatedAt        time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt        time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *postR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L postL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -44,20 +44,20 @@ var PostColumns = struct {
 	Content          string
 	UserID           string
 	Status           string
-	CreatedAt        string
-	UpdatedAt        string
 	FirstPublishedAt string
 	ContentUpdatedAt string
+	CreatedAt        string
+	UpdatedAt        string
 }{
 	ID:               "id",
 	Title:            "title",
 	Content:          "content",
 	UserID:           "user_id",
 	Status:           "status",
-	CreatedAt:        "created_at",
-	UpdatedAt:        "updated_at",
 	FirstPublishedAt: "first_published_at",
 	ContentUpdatedAt: "content_updated_at",
+	CreatedAt:        "created_at",
+	UpdatedAt:        "updated_at",
 }
 
 var PostTableColumns = struct {
@@ -66,20 +66,20 @@ var PostTableColumns = struct {
 	Content          string
 	UserID           string
 	Status           string
-	CreatedAt        string
-	UpdatedAt        string
 	FirstPublishedAt string
 	ContentUpdatedAt string
+	CreatedAt        string
+	UpdatedAt        string
 }{
 	ID:               "posts.id",
 	Title:            "posts.title",
 	Content:          "posts.content",
 	UserID:           "posts.user_id",
 	Status:           "posts.status",
-	CreatedAt:        "posts.created_at",
-	UpdatedAt:        "posts.updated_at",
 	FirstPublishedAt: "posts.first_published_at",
 	ContentUpdatedAt: "posts.content_updated_at",
+	CreatedAt:        "posts.created_at",
+	UpdatedAt:        "posts.updated_at",
 }
 
 // Generated where
@@ -114,36 +114,33 @@ var PostWhere = struct {
 	Content          whereHelperstring
 	UserID           whereHelperstring
 	Status           whereHelperstring
-	CreatedAt        whereHelpertime_Time
-	UpdatedAt        whereHelpertime_Time
 	FirstPublishedAt whereHelpernull_Time
 	ContentUpdatedAt whereHelpernull_Time
+	CreatedAt        whereHelpertime_Time
+	UpdatedAt        whereHelpertime_Time
 }{
 	ID:               whereHelperstring{field: "\"posts\".\"id\""},
 	Title:            whereHelperstring{field: "\"posts\".\"title\""},
 	Content:          whereHelperstring{field: "\"posts\".\"content\""},
 	UserID:           whereHelperstring{field: "\"posts\".\"user_id\""},
 	Status:           whereHelperstring{field: "\"posts\".\"status\""},
-	CreatedAt:        whereHelpertime_Time{field: "\"posts\".\"created_at\""},
-	UpdatedAt:        whereHelpertime_Time{field: "\"posts\".\"updated_at\""},
 	FirstPublishedAt: whereHelpernull_Time{field: "\"posts\".\"first_published_at\""},
 	ContentUpdatedAt: whereHelpernull_Time{field: "\"posts\".\"content_updated_at\""},
+	CreatedAt:        whereHelpertime_Time{field: "\"posts\".\"created_at\""},
+	UpdatedAt:        whereHelpertime_Time{field: "\"posts\".\"updated_at\""},
 }
 
 // PostRels is where relationship names are stored.
 var PostRels = struct {
-	User   string
 	Images string
 	Tags   string
 }{
-	User:   "User",
 	Images: "Images",
 	Tags:   "Tags",
 }
 
 // postR is where relationships are stored.
 type postR struct {
-	User   *User      `boil:"User" json:"User" toml:"User" yaml:"User"`
 	Images ImageSlice `boil:"Images" json:"Images" toml:"Images" yaml:"Images"`
 	Tags   TagSlice   `boil:"Tags" json:"Tags" toml:"Tags" yaml:"Tags"`
 }
@@ -151,13 +148,6 @@ type postR struct {
 // NewStruct creates a new relationship struct
 func (*postR) NewStruct() *postR {
 	return &postR{}
-}
-
-func (r *postR) GetUser() *User {
-	if r == nil {
-		return nil
-	}
-	return r.User
 }
 
 func (r *postR) GetImages() ImageSlice {
@@ -178,9 +168,9 @@ func (r *postR) GetTags() TagSlice {
 type postL struct{}
 
 var (
-	postAllColumns            = []string{"id", "title", "content", "user_id", "status", "created_at", "updated_at", "first_published_at", "content_updated_at"}
+	postAllColumns            = []string{"id", "title", "content", "user_id", "status", "first_published_at", "content_updated_at", "created_at", "updated_at"}
 	postColumnsWithoutDefault = []string{"id", "title", "content", "user_id"}
-	postColumnsWithDefault    = []string{"status", "created_at", "updated_at", "first_published_at", "content_updated_at"}
+	postColumnsWithDefault    = []string{"status", "first_published_at", "content_updated_at", "created_at", "updated_at"}
 	postPrimaryKeyColumns     = []string{"id"}
 	postGeneratedColumns      = []string{}
 )
@@ -510,17 +500,6 @@ func (q postQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool,
 	return count > 0, nil
 }
 
-// User pointed to by the foreign key.
-func (o *Post) User(mods ...qm.QueryMod) userQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.UserID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return Users(queryMods...)
-}
-
 // Images retrieves all the image's Images with an executor.
 func (o *Post) Images(mods ...qm.QueryMod) imageQuery {
 	var queryMods []qm.QueryMod
@@ -548,126 +527,6 @@ func (o *Post) Tags(mods ...qm.QueryMod) tagQuery {
 	)
 
 	return Tags(queryMods...)
-}
-
-// LoadUser allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (postL) LoadUser(ctx context.Context, e boil.ContextExecutor, singular bool, maybePost interface{}, mods queries.Applicator) error {
-	var slice []*Post
-	var object *Post
-
-	if singular {
-		var ok bool
-		object, ok = maybePost.(*Post)
-		if !ok {
-			object = new(Post)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybePost)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybePost))
-			}
-		}
-	} else {
-		s, ok := maybePost.(*[]*Post)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybePost)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybePost))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &postR{}
-		}
-		args[object.UserID] = struct{}{}
-
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &postR{}
-			}
-
-			args[obj.UserID] = struct{}{}
-
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`users`),
-		qm.WhereIn(`users.id in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load User")
-	}
-
-	var resultSlice []*User
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice User")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for users")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for users")
-	}
-
-	if len(userAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.User = foreign
-		if foreign.R == nil {
-			foreign.R = &userR{}
-		}
-		foreign.R.Posts = append(foreign.R.Posts, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.UserID == foreign.ID {
-				local.R.User = foreign
-				if foreign.R == nil {
-					foreign.R = &userR{}
-				}
-				foreign.R.Posts = append(foreign.R.Posts, local)
-				break
-			}
-		}
-	}
-
-	return nil
 }
 
 // LoadImages allows an eager lookup of values, cached into the
@@ -908,61 +767,6 @@ func (postL) LoadTags(ctx context.Context, e boil.ContextExecutor, singular bool
 				break
 			}
 		}
-	}
-
-	return nil
-}
-
-// SetUserG of the post to the related item.
-// Sets o.R.User to related.
-// Adds o to related.R.Posts.
-// Uses the global database handle.
-func (o *Post) SetUserG(ctx context.Context, insert bool, related *User) error {
-	return o.SetUser(ctx, boil.GetContextDB(), insert, related)
-}
-
-// SetUser of the post to the related item.
-// Sets o.R.User to related.
-// Adds o to related.R.Posts.
-func (o *Post) SetUser(ctx context.Context, exec boil.ContextExecutor, insert bool, related *User) error {
-	var err error
-	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"posts\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
-		strmangle.WhereClause("\"", "\"", 2, postPrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
-	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.UserID = related.ID
-	if o.R == nil {
-		o.R = &postR{
-			User: related,
-		}
-	} else {
-		o.R.User = related
-	}
-
-	if related.R == nil {
-		related.R = &userR{
-			Posts: PostSlice{o},
-		}
-	} else {
-		related.R.Posts = append(related.R.Posts, o)
 	}
 
 	return nil

@@ -29,18 +29,18 @@ type ListPostsRequest struct {
 
 // ListPostsResponse は投稿一覧取得のレスポンス
 type ListPostsResponse struct {
-	Posts []*PostSummary `json:"posts"`
+	Posts []*PostSummary  `json:"posts"`
 	Meta  *PaginationMeta `json:"meta"`
 }
 
 // PostSummary は投稿の概要情報
 type PostSummary struct {
-	ID                string   `json:"id"`
-	Title             string   `json:"title"`
-	Status            string   `json:"status"`
-	Tags              []string `json:"tags"`
-	FirstPublishedAt  *string  `json:"first_published_at"`
-	ContentUpdatedAt  *string  `json:"content_updated_at"`
+	ID               string   `json:"id"`
+	Title            string   `json:"title"`
+	Status           string   `json:"status"`
+	Tags             []string `json:"tags"`
+	FirstPublishedAt *string  `json:"first_published_at"`
+	ContentUpdatedAt *string  `json:"content_updated_at"`
 }
 
 // PaginationMeta はページネーション情報

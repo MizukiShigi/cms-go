@@ -46,6 +46,7 @@ func (r *PostRepository) Create(ctx context.Context, post *entity.Post) error {
 	}
 
 	if err := dbPost.Insert(ctx, GetExecDB(ctx, r.db), boil.Infer()); err != nil {
+		slog.ErrorContext(ctx, err.Error())
 		return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to create post")
 	}
 
@@ -121,14 +122,14 @@ func (r *PostRepository) SetTags(ctx context.Context, post *entity.Post, tags []
 func (r *PostRepository) List(ctx context.Context, options *repository.ListPostsOptions) ([]*entity.Post, int, error) {
 	// カウントクエリ
 	query := models.Posts()
-	
+
 	// ステータスフィルタ
 	if options.Status != nil {
 		query = models.Posts(
 			models.PostWhere.Status.EQ(options.Status.String()),
 		)
 	}
-	
+
 	totalCount, err := query.Count(ctx, r.db)
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to count posts", "error", err)
@@ -137,18 +138,18 @@ func (r *PostRepository) List(ctx context.Context, options *repository.ListPosts
 
 	// データ取得クエリ構築
 	var queryMods []qm.QueryMod
-	
+
 	// ステータスフィルタ
 	if options.Status != nil {
 		queryMods = append(queryMods, models.PostWhere.Status.EQ(options.Status.String()))
 	}
-	
+
 	queryMods = append(queryMods,
 		qm.Load(models.PostRels.Tags),
 		qm.Limit(options.Limit),
 		qm.Offset(options.Offset),
 	)
-	
+
 	// ソート順設定
 	switch options.Sort {
 	case "created_at_asc":

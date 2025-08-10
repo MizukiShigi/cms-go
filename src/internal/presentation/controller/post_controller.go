@@ -429,6 +429,7 @@ func (pc *PostController) PatchPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) ListPosts(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(1 * time.Second)
 	// クエリパラメータを取得
 	query := r.URL.Query()
 	req := &usecase.ListPostsRequest{

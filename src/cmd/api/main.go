@@ -44,15 +44,19 @@ func main() {
 	name := getEnvOrDefault("DB_NAME", "cms_dev")
 	user := getEnvOrDefault("DB_USER", "postgres")
 	password := getEnvOrDefault("DB_PASSWORD", "postgres")
-	jwtSecret := os.Getenv("JWT_SECRET_KEY")
+	auth0Domain := os.Getenv("AUTH0_DOMAIN")
+	audience := os.Getenv("AUDIENCE")
 	port := getEnvOrDefault("PORT", "8080")
 
 	// 必須環境変数の検証
 	if env == "" {
 		log.Fatal("ENV environment variable is required")
 	}
-	if jwtSecret == "" {
-		log.Fatal("JWT_SECRET_KEY environment variable is required")
+	if auth0Domain == "" {
+		log.Fatal("AUTH0_DOMAIN environment variable is required")
+	}
+	if audience == "" {
+		log.Fatal("AUDIENCE environment variable is required")
 	}
 
 	slog.Info("Starting application",
@@ -86,18 +90,18 @@ func main() {
 
 	// リポジトリ初期化
 	transactionManager := repository.NewTransactionManager(db)
-	userRepository := repository.NewUserRepository(db)
+	// userRepository := repository.NewUserRepository(db)
 	postRepository := repository.NewPostRepository(db)
 	tagRepository := repository.NewTagRepository(db)
 	imageRepository := repository.NewImageRepository(db)
 
 	// サービス初期化
-	authService := service.NewJWTService(jwtSecret)
+	// authService := service.NewJWTService(jwtSecret)
 	storageService := service.NewStorageService(gcsClient)
 
 	// ユースケース初期化
-	registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
-	loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
+	// registerUserUsecase := usecase.NewRegisterUserUsecase(userRepository)
+	// loginUserUsecase := usecase.NewLoginUserUsecase(userRepository, authService)
 	listPostsUsecase := usecase.NewListPostsUsecase(postRepository)
 	createPostUsecase := usecase.NewCreatePostUsecase(transactionManager, postRepository, tagRepository)
 	getPostUsecase := usecase.NewGetPostUsecase(postRepository)
@@ -106,7 +110,7 @@ func main() {
 	createImageUsecase := usecase.NewCreateImageUsecase(imageRepository, storageService)
 
 	// コントローラー初期化
-	authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
+	// authController := controller.NewAuthController(registerUserUsecase, loginUserUsecase)
 	postController := controller.NewPostController(listPostsUsecase, createPostUsecase, getPostUsecase, updatePostUsecase, patchPostUsecase)
 	imageController := controller.NewImageController(createImageUsecase)
 	// ルーティング設定
@@ -121,16 +125,16 @@ func main() {
 	v1Router := r.PathPrefix("/cms/v1").Subrouter()
 
 	// 認証不要パス
-	publicV1Router := v1Router.PathPrefix("/").Subrouter()
+	// publicV1Router := v1Router.PathPrefix("/").Subrouter()
 
 	// 認証
-	authRouter := publicV1Router.PathPrefix("/auth").Subrouter()
-	authRouter.HandleFunc("/register", authController.Register).Methods("POST", "OPTIONS")
-	authRouter.HandleFunc("/login", authController.Login).Methods("POST", "OPTIONS")
+	// authRouter := publicV1Router.PathPrefix("/auth").Subrouter()
+	// authRouter.HandleFunc("/register", authController.Register).Methods("POST", "OPTIONS")
+	// authRouter.HandleFunc("/login", authController.Login).Methods("POST", "OPTIONS")
 
 	// 認証必須パス
 	protectedV1Router := v1Router.PathPrefix("/").Subrouter()
-	protectedV1Router.Use(middleware.AuthMiddleware(jwtSecret))
+	protectedV1Router.Use(middleware.AuthMiddleware(auth0Domain, audience))
 
 	// 投稿
 	postRouter := protectedV1Router.PathPrefix("/posts").Subrouter()

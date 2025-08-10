@@ -23,12 +23,12 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 		usecase := NewListPostsUsecase(mockPostRepo)
 
 		userID := valueobject.NewUserID()
-		
+
 		// テスト用の投稿データを作成
 		post1Title, _ := valueobject.NewPostTitle("投稿1")
 		post1Content, _ := valueobject.NewPostContent("投稿1の内容")
 		post1, _ := entity.NewPost(post1Title, post1Content, userID, valueobject.StatusPublished)
-		
+
 		post2Title, _ := valueobject.NewPostTitle("投稿2")
 		post2Content, _ := valueobject.NewPostContent("投稿2の内容")
 		post2, _ := entity.NewPost(post2Title, post2Content, userID, valueobject.StatusDraft)
@@ -64,7 +64,7 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 		assert.Equal(t, post1.ID.String(), result.Posts[0].ID)
 		assert.Equal(t, "投稿1", result.Posts[0].Title)
 		assert.Equal(t, "published", result.Posts[0].Status)
-		
+
 		assert.Equal(t, post2.ID.String(), result.Posts[1].ID)
 		assert.Equal(t, "投稿2", result.Posts[1].Title)
 		assert.Equal(t, "draft", result.Posts[1].Status)
@@ -157,7 +157,7 @@ func TestListPostsUsecase_Execute(t *testing.T) {
 
 		// リクエスト作成
 		req := &ListPostsRequest{
-			Sort:   "updated_at_asc",
+			Sort: "updated_at_asc",
 		}
 
 		// 実行
@@ -236,7 +236,7 @@ func TestListPostsUsecase_convertToSummary(t *testing.T) {
 		title, _ := valueobject.NewPostTitle("テスト投稿")
 		content, _ := valueobject.NewPostContent("テスト内容")
 		status := valueobject.StatusPublished
-		
+
 		tagName1, _ := valueobject.NewTagName("技術")
 		tagName2, _ := valueobject.NewTagName("Go")
 		tags := []valueobject.TagName{tagName1, tagName2}
@@ -268,7 +268,7 @@ func TestListPostsUsecase_convertToSummary(t *testing.T) {
 		assert.Len(t, summary.Tags, 2)
 		assert.Contains(t, summary.Tags, "技術")
 		assert.Contains(t, summary.Tags, "Go")
-		assert.NotNil(t, summary.FirstPublishedAt) 
+		assert.NotNil(t, summary.FirstPublishedAt)
 		assert.NotNil(t, summary.ContentUpdatedAt)
 	})
 

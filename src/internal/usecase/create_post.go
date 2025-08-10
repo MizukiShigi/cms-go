@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/MizukiShigi/cms-go/internal/domain/entity"
 	"github.com/MizukiShigi/cms-go/internal/domain/repository"
@@ -54,6 +55,7 @@ func (u *CreatePostUsecase) Execute(ctx context.Context, input *CreatePostInput)
 	transactionErr := u.transactionManager.Transaction(ctx, func(ctx context.Context) error {
 		err = u.postRepository.Create(ctx, post)
 		if err != nil {
+			slog.ErrorContext(ctx, err.Error())
 			return valueobject.NewMyError(valueobject.InternalServerErrorCode, "Failed to create post")
 		}
 

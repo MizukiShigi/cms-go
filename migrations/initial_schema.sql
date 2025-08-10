@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'draft',
     first_published_at TIMESTAMP WITH TIME ZONE,
     content_updated_at TIMESTAMP WITH TIME ZONE,

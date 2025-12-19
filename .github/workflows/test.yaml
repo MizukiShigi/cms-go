@@ -1,0 +1,12 @@
+name: Test New Workflow
+
+on:
+  push:
+    branches:
+      - feature/workflow-test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ワークフローのテスト中"
